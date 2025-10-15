@@ -1,11 +1,11 @@
 use iced::widget::{button, container, mouse_area, scrollable, text, text_input, Column, Row};
-use iced::{Element, Length, Padding};
+use iced::{Alignment, Element, Length, Padding};
 
 use crate::app::Message;
 use crate::app::state::ContextMenuTarget;
 use crate::i18n::Translations;
 use crate::models::{Collection, CollectionItem};
-use crate::ui::underline_input;
+use crate::ui::{icons, underline_input};
 
 pub fn view<'a>(
     collections: &'a [Collection],
@@ -135,7 +135,8 @@ pub fn view<'a>(
         Row::new()
             .spacing(8)
             .padding([8, 16])
-            .push(text("⚙").size(16))
+            .align_y(Alignment::Center)
+            .push(icons::settings_icon(16))
             .push(text(translations.get("settings")).size(13))
     )
     .on_press(Message::ShowSettingsDialog)

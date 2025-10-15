@@ -1,5 +1,5 @@
 use crate::i18n::{I18n, Language, Translations};
-use crate::models::{Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
+use crate::models::{BodyViewMode, Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
 use crate::ui::toast::Toast;
 use crate::utils::navigation;
 use iced::widget::{text_editor, text_input};
@@ -55,6 +55,8 @@ pub struct Requiem {
     pub active_tab: RequestTab,
     pub response: Option<Response>,
     pub active_response_tab: ResponseTab, // Active response tab
+    pub active_body_view_mode: BodyViewMode, // Active body view mode (Pretty, Source, Preview, Raw)
+    pub raw_response_body: String, // Original raw response body before formatting
     pub loading: bool,
     pub toast: Option<Toast>,
     pub context_menu: Option<ContextMenu>,
@@ -133,6 +135,8 @@ impl Requiem {
             active_tab: RequestTab::Body,
             response: None,
             active_response_tab: ResponseTab::Body,
+            active_body_view_mode: BodyViewMode::Raw,
+            raw_response_body: String::new(),
             loading: false,
             toast: None,
             context_menu: None,

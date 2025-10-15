@@ -5,7 +5,7 @@ use crate::app::Message;
 use crate::i18n::Translations;
 use crate::models::{BodyFormat, BodyType, Environment, Request, RequestTab};
 use crate::ui::body_highlighter::BodyLanguage;
-use crate::ui::components::{code_editor, environment_picker, method_picker, tabs_bar};
+use crate::ui::components::{code_editor, /* environment_picker, */ key_value_editor, method_picker, option_buttons, tabs_bar};
 
 pub fn view<'a>(
     request: &'a Request,
@@ -23,7 +23,7 @@ pub fn view<'a>(
         .padding(10)
         .size(13);
 
-    let env_selector = environment_picker::view(current_env);
+    // let env_selector = environment_picker::view(current_env);
 
     let send_text = translations.get("send");
     let send_button = button(text(send_text).size(14))
@@ -37,7 +37,7 @@ pub fn view<'a>(
         .align_y(Alignment::Center)
         .push(method_selector)
         .push(url_input)
-        .push(env_selector)
+        // .push(env_selector)
         .push(send_button);
 
     // Tabs bar
@@ -70,102 +70,37 @@ pub fn view<'a>(
 }
 
 fn view_params_tab<'a>(request: &'a Request, translations: &'a Translations) -> Element<'a, Message> {
-    // Pre-allocate all translated strings
-    let key_label = translations.get("param_key_label");
-    let value_label = translations.get("param_value_label");
-    let key_placeholder = translations.get("param_key_placeholder");
-    let value_placeholder = translations.get("param_value_placeholder");
-    let add_param_text = translations.get("add_param");
+    let config = key_value_editor::KeyValueEditorConfig {
+        key_label: translations.get("param_key_label"),
+        value_label: translations.get("param_value_label"),
+        key_placeholder: translations.get("param_key_placeholder"),
+        value_placeholder: translations.get("param_value_placeholder"),
+        add_button_text: translations.get("add_param"),
+    };
 
-    let mut params_column = Column::new()
-        .spacing(10);
-
-    // Header row with column labels
-    let header_labels = Row::new()
-        .spacing(16)
-        .padding([8, 0])
-        .push(
-            container(text(key_label).size(12))
-                .width(Length::FillPortion(1))
-        )
-        .push(
-            container(text(value_label).size(12))
-                .width(Length::FillPortion(2))
-        )
-        .push(
-            container(text("").size(12))
-                .width(Length::Fixed(40.0))
-        );
-
-    params_column = params_column.push(header_labels);
-
-    for (idx, param) in request.query_params.iter().enumerate() {
-        let key_input = text_input(&key_placeholder, &param.key)
-            .on_input(move |v| Message::ParamKeyChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let value_input = text_input(&value_placeholder, &param.value)
-            .on_input(move |v| Message::ParamValueChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let remove_button = button(text("×").size(16))
-            .on_press(Message::RemoveParam(idx))
-            .padding([8, 12])
-            .style(button::text);
-
-        let param_row = Row::new()
-            .spacing(16)
-            .align_y(Alignment::Center)
-            .push(container(key_input).width(Length::FillPortion(1)))
-            .push(container(value_input).width(Length::FillPortion(2)))
-            .push(remove_button);
-
-        params_column = params_column.push(param_row);
-    }
-
-    let add_param_button = button(text(add_param_text).size(13))
-        .on_press(Message::AddParam)
-        .padding([10, 16])
-        .style(button::secondary);
-
-    params_column = params_column.push(add_param_button);
-
-    container(params_column)
-        .padding(20)
-        .into()
+    key_value_editor::view(
+        &request.query_params,
+        config,
+        |param| &param.key,
+        |param| &param.value,
+        Message::ParamKeyChanged,
+        Message::ParamValueChanged,
+        Message::RemoveParam,
+        Message::AddParam,
+    )
 }
 
 fn view_body_tab<'a>(request: &'a Request, body_content: &'a text_editor::Content, translations: &'a Translations) -> Element<'a, Message> {
-    // Pre-allocate all translated strings for FormData
-    let form_key_label = translations.get("param_key_label");
-    let form_value_label = translations.get("param_value_label");
-    let form_key_ph = translations.get("form_key_placeholder");
-    let form_value_ph = translations.get("form_value_placeholder");
-    let add_field_text = translations.get("add_form_field");
-
-    // Body type selector
+    // Body type selector using option_buttons component
     let body_formats = BodyFormat::all();
     let current_format = request.body.format();
 
-    let mut format_selector = Row::new().spacing(4).padding([12, 16]);
-
-    for format in body_formats {
-        let is_selected = format == current_format;
-        let btn = button(text(format.as_str()).size(12))
-            .on_press(Message::BodyFormatChanged(format))
-            .padding([8, 14])
-            .style(if is_selected {
-                button::primary
-            } else {
-                button::text
-            });
-        format_selector = format_selector.push(btn);
-    }
-
-    // Add flexible space to push format buttons to the left
-    format_selector = format_selector.push(container(text("")).width(Length::Fill));
+    let format_selector = option_buttons::view(
+        body_formats,
+        current_format,
+        |format| format.as_str().to_string(),
+        Message::BodyFormatChanged,
+    );
 
     // Body editor - only show if not None
     let mut content_column = Column::new()
@@ -178,70 +113,31 @@ fn view_body_tab<'a>(request: &'a Request, body_content: &'a text_editor::Conten
         match current_format {
             BodyFormat::FormData | BodyFormat::FormUrlEncoded => {
                 // Show key-value table for form data
-                let form_fields = match &request.body {
-                    BodyType::FormData(fields) | BodyType::FormUrlEncoded(fields) => fields.clone(),
-                    _ => vec![],
+                let config = key_value_editor::KeyValueEditorConfig {
+                    key_label: translations.get("param_key_label"),
+                    value_label: translations.get("param_value_label"),
+                    key_placeholder: translations.get("form_key_placeholder"),
+                    value_placeholder: translations.get("form_value_placeholder"),
+                    add_button_text: translations.get("add_form_field"),
                 };
 
-                let mut form_column = Column::new()
-                    .spacing(10);
+                let form_editor = match &request.body {
+                    BodyType::FormData(fields) | BodyType::FormUrlEncoded(fields) => {
+                        key_value_editor::view(
+                            fields,
+                            config,
+                            |field| &field.key,
+                            |field| &field.value,
+                            Message::FormDataKeyChanged,
+                            Message::FormDataValueChanged,
+                            Message::RemoveFormDataField,
+                            Message::AddFormDataField,
+                        )
+                    }
+                    _ => container(text("")).into(),
+                };
 
-                // Header row with column labels
-                let header_labels = Row::new()
-                    .spacing(16)
-                    .padding([8, 0])
-                    .push(
-                        container(text(form_key_label).size(12))
-                            .width(Length::FillPortion(1))
-                    )
-                    .push(
-                        container(text(form_value_label).size(12))
-                            .width(Length::FillPortion(2))
-                    )
-                    .push(
-                        container(text("").size(12))
-                            .width(Length::Fixed(40.0))
-                    );
-
-                form_column = form_column.push(header_labels);
-
-                for (idx, field) in form_fields.iter().enumerate() {
-                    let key_input = text_input(&form_key_ph, &field.key)
-                        .on_input(move |v| Message::FormDataKeyChanged(idx, v))
-                        .padding(10)
-                        .size(13);
-
-                    let value_input = text_input(&form_value_ph, &field.value)
-                        .on_input(move |v| Message::FormDataValueChanged(idx, v))
-                        .padding(10)
-                        .size(13);
-
-                    let remove_button = button(text("×").size(16))
-                        .on_press(Message::RemoveFormDataField(idx))
-                        .padding([8, 12])
-                        .style(button::text);
-
-                    let field_row = Row::new()
-                        .spacing(16)
-                        .align_y(Alignment::Center)
-                        .push(container(key_input).width(Length::FillPortion(1)))
-                        .push(container(value_input).width(Length::FillPortion(2)))
-                        .push(remove_button);
-
-                    form_column = form_column.push(field_row);
-                }
-
-                let add_field_button = button(text(add_field_text).size(13))
-                    .on_press(Message::AddFormDataField)
-                    .padding([10, 16])
-                    .style(button::secondary);
-
-                form_column = form_column.push(add_field_button);
-
-                content_column = content_column.push(
-                    container(form_column)
-                        .padding(20)
-                );
+                content_column = content_column.push(form_editor);
             }
             _ => {
                 // Determine language for syntax highlighting
@@ -267,202 +163,64 @@ fn view_body_tab<'a>(request: &'a Request, body_content: &'a text_editor::Conten
 }
 
 fn view_headers_tab<'a>(request: &'a Request, translations: &'a Translations) -> Element<'a, Message> {
-    // Pre-allocate all translated strings
-    let key_label = translations.get("header_key_label");
-    let value_label = translations.get("header_value_label");
-    let key_ph = translations.get("header_key_placeholder");
-    let value_ph = translations.get("header_value_placeholder");
-    let add_text = translations.get("add_header");
-    let mut headers_column = Column::new()
-        .spacing(10);
+    let config = key_value_editor::KeyValueEditorConfig {
+        key_label: translations.get("header_key_label"),
+        value_label: translations.get("header_value_label"),
+        key_placeholder: translations.get("header_key_placeholder"),
+        value_placeholder: translations.get("header_value_placeholder"),
+        add_button_text: translations.get("add_header"),
+    };
 
-    // Header row with column labels
-    let header_labels = Row::new()
-        .spacing(16)
-        .padding([8, 0])
-        .push(
-            container(text(key_label).size(12))
-                .width(Length::FillPortion(1))
-        )
-        .push(
-            container(text(value_label).size(12))
-                .width(Length::FillPortion(2))
-        )
-        .push(
-            container(text("").size(12))
-                .width(Length::Fixed(40.0))
-        );
-
-    headers_column = headers_column.push(header_labels);
-
-    for (idx, header) in request.headers.iter().enumerate() {
-        let key_input = text_input(&key_ph, &header.key)
-            .on_input(move |v| Message::HeaderKeyChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let value_input = text_input(&value_ph, &header.value)
-            .on_input(move |v| Message::HeaderValueChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let remove_button = button(text("×").size(16))
-            .on_press(Message::RemoveHeader(idx))
-            .padding([8, 12])
-            .style(button::text);
-
-        let header_row = Row::new()
-            .spacing(16)
-            .align_y(Alignment::Center)
-            .push(container(key_input).width(Length::FillPortion(1)))
-            .push(container(value_input).width(Length::FillPortion(2)))
-            .push(remove_button);
-
-        headers_column = headers_column.push(header_row);
-    }
-
-    let add_header_button = button(text(add_text).size(13))
-        .on_press(Message::AddHeader)
-        .padding([10, 16])
-        .style(button::secondary);
-
-    headers_column = headers_column.push(add_header_button);
-
-    container(headers_column)
-        .padding(20)
-        .into()
+    key_value_editor::view(
+        &request.headers,
+        config,
+        |header| &header.key,
+        |header| &header.value,
+        Message::HeaderKeyChanged,
+        Message::HeaderValueChanged,
+        Message::RemoveHeader,
+        Message::AddHeader,
+    )
 }
 
 fn view_cookies_tab<'a>(request: &'a Request, translations: &'a Translations) -> Element<'a, Message> {
-    // Pre-allocate all translated strings
-    let key_label = translations.get("cookie_key_label");
-    let value_label = translations.get("cookie_value_label");
-    let key_ph = translations.get("cookie_key_placeholder");
-    let value_ph = translations.get("cookie_value_placeholder");
-    let add_text = translations.get("add_cookie");
-    let mut cookies_column = Column::new()
-        .spacing(10);
+    let config = key_value_editor::KeyValueEditorConfig {
+        key_label: translations.get("cookie_key_label"),
+        value_label: translations.get("cookie_value_label"),
+        key_placeholder: translations.get("cookie_key_placeholder"),
+        value_placeholder: translations.get("cookie_value_placeholder"),
+        add_button_text: translations.get("add_cookie"),
+    };
 
-    // Header row with column labels
-    let header_labels = Row::new()
-        .spacing(16)
-        .padding([8, 0])
-        .push(
-            container(text(key_label).size(12))
-                .width(Length::FillPortion(1))
-        )
-        .push(
-            container(text(value_label).size(12))
-                .width(Length::FillPortion(2))
-        )
-        .push(
-            container(text("").size(12))
-                .width(Length::Fixed(40.0))
-        );
-
-    cookies_column = cookies_column.push(header_labels);
-
-    for (idx, cookie) in request.cookies.iter().enumerate() {
-        let key_input = text_input(&key_ph, &cookie.key)
-            .on_input(move |v| Message::CookieKeyChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let value_input = text_input(&value_ph, &cookie.value)
-            .on_input(move |v| Message::CookieValueChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let remove_button = button(text("×").size(16))
-            .on_press(Message::RemoveCookie(idx))
-            .padding([8, 12])
-            .style(button::text);
-
-        let cookie_row = Row::new()
-            .spacing(16)
-            .align_y(Alignment::Center)
-            .push(container(key_input).width(Length::FillPortion(1)))
-            .push(container(value_input).width(Length::FillPortion(2)))
-            .push(remove_button);
-
-        cookies_column = cookies_column.push(cookie_row);
-    }
-
-    let add_cookie_button = button(text(add_text).size(13))
-        .on_press(Message::AddCookie)
-        .padding([10, 16])
-        .style(button::secondary);
-
-    cookies_column = cookies_column.push(add_cookie_button);
-
-    container(cookies_column)
-        .padding(20)
-        .into()
+    key_value_editor::view(
+        &request.cookies,
+        config,
+        |cookie| &cookie.key,
+        |cookie| &cookie.value,
+        Message::CookieKeyChanged,
+        Message::CookieValueChanged,
+        Message::RemoveCookie,
+        Message::AddCookie,
+    )
 }
 
 fn view_auth_tab<'a>(request: &'a Request, translations: &'a Translations) -> Element<'a, Message> {
-    // Pre-allocate all translated strings
-    let key_label = translations.get("auth_key_label");
-    let value_label = translations.get("auth_value_label");
-    let key_ph = translations.get("auth_key_placeholder");
-    let value_ph = translations.get("auth_value_placeholder");
-    let add_text = translations.get("add_auth_field");
-    let mut auth_column = Column::new()
-        .spacing(10);
+    let config = key_value_editor::KeyValueEditorConfig {
+        key_label: translations.get("auth_key_label"),
+        value_label: translations.get("auth_value_label"),
+        key_placeholder: translations.get("auth_key_placeholder"),
+        value_placeholder: translations.get("auth_value_placeholder"),
+        add_button_text: translations.get("add_auth_field"),
+    };
 
-    // Header row with column labels
-    let header_labels = Row::new()
-        .spacing(16)
-        .padding([8, 0])
-        .push(
-            container(text(key_label).size(12))
-                .width(Length::FillPortion(1))
-        )
-        .push(
-            container(text(value_label).size(12))
-                .width(Length::FillPortion(2))
-        )
-        .push(
-            container(text("").size(12))
-                .width(Length::Fixed(40.0))
-        );
-
-    auth_column = auth_column.push(header_labels);
-
-    for (idx, auth_field) in request.auth.iter().enumerate() {
-        let key_input = text_input(&key_ph, &auth_field.key)
-            .on_input(move |v| Message::AuthKeyChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let value_input = text_input(&value_ph, &auth_field.value)
-            .on_input(move |v| Message::AuthValueChanged(idx, v))
-            .padding(10)
-            .size(13);
-
-        let remove_button = button(text("×").size(16))
-            .on_press(Message::RemoveAuthField(idx))
-            .padding([8, 12])
-            .style(button::text);
-
-        let auth_row = Row::new()
-            .spacing(16)
-            .align_y(Alignment::Center)
-            .push(container(key_input).width(Length::FillPortion(1)))
-            .push(container(value_input).width(Length::FillPortion(2)))
-            .push(remove_button);
-
-        auth_column = auth_column.push(auth_row);
-    }
-
-    let add_auth_button = button(text(add_text).size(13))
-        .on_press(Message::AddAuthField)
-        .padding([10, 16])
-        .style(button::secondary);
-
-    auth_column = auth_column.push(add_auth_button);
-
-    container(auth_column)
-        .padding(20)
-        .into()
+    key_value_editor::view(
+        &request.auth,
+        config,
+        |auth| &auth.key,
+        |auth| &auth.value,
+        Message::AuthKeyChanged,
+        Message::AuthValueChanged,
+        Message::RemoveAuthField,
+        Message::AddAuthField,
+    )
 }

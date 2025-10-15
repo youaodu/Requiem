@@ -37,7 +37,9 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
         let response_panel = response_viewer::view(
             &state.response,
             state.active_response_tab,
+            state.active_body_view_mode,
             &state.response_body_content,
+            state.loading,
         );
 
         // Column layout: tab bar on top, editor in middle, response at bottom

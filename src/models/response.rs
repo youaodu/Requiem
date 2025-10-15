@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use super::KeyValue;
 
 /// HTTP Response
 #[derive(Debug, Clone)]
@@ -6,6 +7,7 @@ pub struct Response {
     pub status: u16,
     pub status_text: String,
     pub headers: HashMap<String, String>,
+    pub cookies: Vec<KeyValue>,
     pub body: String,
     pub time_ms: u128,
     pub size_bytes: usize,
@@ -16,6 +18,7 @@ impl Response {
         status: u16,
         status_text: String,
         headers: HashMap<String, String>,
+        cookies: Vec<KeyValue>,
         body: String,
         time_ms: u128,
     ) -> Self {
@@ -24,6 +27,7 @@ impl Response {
             status,
             status_text,
             headers,
+            cookies,
             body,
             time_ms,
             size_bytes,

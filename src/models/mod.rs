@@ -16,4 +16,4 @@ pub use key_value::KeyValue;
 pub use request::Request;
 pub use request_tab::RequestTab;
 pub use response::Response;
-pub use response_tab::ResponseTab;
+pub use response_tab::{BodyViewMode, ResponseTab};

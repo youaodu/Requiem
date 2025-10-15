@@ -1,4 +1,4 @@
-use crate::models::{BodyType, HttpMethod, Request, Response};
+use crate::models::{BodyType, HttpMethod, KeyValue, Request, Response};
 use anyhow::Result;
 use reqwest::Client;
 use std::collections::HashMap;
@@ -73,8 +73,19 @@ pub async fn execute_request(request: &Request) -> Result<Response> {
     let status_text = response.status().to_string();
 
     let mut headers_map = HashMap::new();
+    let mut cookies = Vec::new();
+
     for (key, value) in response.headers() {
         if let Ok(v) = value.to_str() {
+            // Extract cookies from Set-Cookie headers
+            if key.as_str().to_lowercase() == "set-cookie" {
+                // Parse cookie: extract name=value part before first semicolon
+                if let Some(cookie_pair) = v.split(';').next() {
+                    if let Some((name, value)) = cookie_pair.split_once('=') {
+                        cookies.push(KeyValue::new(name.trim().to_string(), value.trim().to_string()));
+                    }
+                }
+            }
             headers_map.insert(key.to_string(), v.to_string());
         }
     }
@@ -85,6 +96,7 @@ pub async fn execute_request(request: &Request) -> Result<Response> {
         status,
         status_text,
         headers_map,
+        cookies,
         body,
         elapsed.as_millis(),
     ))

@@ -3,9 +3,10 @@ use iced::{Border, Color, Element, Length};
 use std::collections::HashMap;
 
 use crate::app::Message;
-use crate::models::{Response, ResponseTab};
+use crate::models::{BodyViewMode, Response, ResponseTab};
 use crate::ui::body_highlighter::BodyLanguage;
 use crate::ui::components::code_editor;
+use crate::ui::icons;
 
 /// Detect the language for syntax highlighting based on Content-Type header
 fn detect_language_from_headers(headers: &HashMap<String, String>) -> BodyLanguage {
@@ -25,9 +26,34 @@ fn detect_language_from_headers(headers: &HashMap<String, String>) -> BodyLangua
 pub fn view<'a>(
     response: &'a Option<Response>,
     active_tab: ResponseTab,
+    active_body_view_mode: BodyViewMode,
     response_body_content: &'a text_editor::Content,
+    loading: bool,
 ) -> Element<'a, Message> {
-    if let Some(ref resp) = response {
+    if loading {
+        // Show loading state
+        container(
+            column![
+                Space::with_height(40),
+                container(
+                    text("Loading...")
+                        .size(16)
+                        .color(Color::from_rgb(0.4, 0.4, 0.4))
+                )
+                .width(Length::Fill)
+                .center_x(Length::Fill),
+                Space::with_height(12),
+                container(icons::loading_icon(32))
+                    .width(Length::Fill)
+                    .center_x(Length::Fill),
+            ]
+            .align_x(iced::Alignment::Center)
+        )
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .center_y(Length::Fill)
+        .into()
+    } else if let Some(ref resp) = response {
         // Status bar with status, time, and size
         let status_color = if resp.status >= 200 && resp.status < 300 {
             Color::from_rgb(0.0, 0.7, 0.0) // Green for success
@@ -102,13 +128,92 @@ pub fn view<'a>(
         .padding([8, 16]);
 
         // Tab content based on active tab
-        let tab_content = match active_tab {
+        let tab_content: Element<'a, Message> = match active_tab {
             ResponseTab::Body => {
-                // Determine language based on Content-Type header
-                let language = detect_language_from_headers(&resp.headers);
+                // Body view mode sub-tabs
+                let body_modes = BodyViewMode::all();
+                let body_mode_buttons = body_modes.iter().fold(row![].spacing(0), |row, mode| {
+                    let is_active = *mode == active_body_view_mode;
+                    let mode_style = move |_theme: &iced::Theme, status: button::Status| {
+                        let base_bg = if is_active {
+                            Color::from_rgb(0.93, 0.93, 0.93)
+                        } else {
+                            Color::from_rgb(0.98, 0.98, 0.98)
+                        };
 
-                // Use the code editor component with syntax highlighting
-                code_editor::view(response_body_content, language, Message::ResponseBodyAction)
+                        let bg = match status {
+                            button::Status::Hovered if !is_active => Color::from_rgb(0.95, 0.95, 0.95),
+                            _ => base_bg,
+                        };
+
+                        button::Style {
+                            background: Some(iced::Background::Color(bg)),
+                            text_color: if is_active {
+                                Color::from_rgb(0.0, 0.0, 0.0)
+                            } else {
+                                Color::from_rgb(0.5, 0.5, 0.5)
+                            },
+                            border: Border {
+                                width: 0.0,
+                                color: Color::TRANSPARENT,
+                                radius: 0.0.into(),
+                            },
+                            ..Default::default()
+                        }
+                    };
+
+                    let mode_button = button(
+                        container(text(mode.as_str()).size(12))
+                            .padding([6, 12])
+                            .center_x(Length::Shrink),
+                    )
+                    .on_press(Message::BodyViewModeSelected(*mode))
+                    .style(mode_style)
+                    .padding(0);
+
+                    row.push(mode_button)
+                });
+
+                let body_mode_bar: Element<'a, Message> = container(body_mode_buttons)
+                    .padding([4, 16])
+                    .width(Length::Fill)
+                    .style(|_theme: &iced::Theme| container::Style {
+                        background: Some(iced::Background::Color(Color::from_rgb(0.98, 0.98, 0.98))),
+                        border: Border {
+                            width: 1.0,
+                            color: Color::from_rgb(0.9, 0.9, 0.9),
+                            radius: 0.0.into(),
+                        },
+                        ..Default::default()
+                    })
+                    .into();
+
+                // Body content based on view mode
+                let body_content: Element<'a, Message> = match active_body_view_mode {
+                    BodyViewMode::Raw => {
+                        // Raw view without syntax highlighting
+                        code_editor::view(response_body_content, BodyLanguage::Plain, Message::ResponseBodyAction)
+                    }
+                    BodyViewMode::Json => {
+                        // JSON syntax highlighting
+                        code_editor::view(response_body_content, BodyLanguage::Json, Message::ResponseBodyAction)
+                    }
+                    BodyViewMode::Xml => {
+                        // XML syntax highlighting
+                        code_editor::view(response_body_content, BodyLanguage::Xml, Message::ResponseBodyAction)
+                    }
+                    BodyViewMode::Html => {
+                        // HTML syntax highlighting
+                        code_editor::view(response_body_content, BodyLanguage::Html, Message::ResponseBodyAction)
+                    }
+                };
+
+                // Combine mode bar and body content
+                column![body_mode_bar, body_content]
+                    .spacing(0)
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .into()
             }
             ResponseTab::Headers => {
                 let headers_list = resp.headers.iter().fold(
@@ -131,16 +236,36 @@ pub fn view<'a>(
                     .into()
             }
             ResponseTab::Cookies => {
-                // For now, show a placeholder for cookies
-                container(
-                    text("Cookies parsing not yet implemented")
-                        .size(14)
-                        .color(Color::from_rgb(0.5, 0.5, 0.5)),
-                )
-                .padding(16)
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .into()
+                if resp.cookies.is_empty() {
+                    container(
+                        text("No cookies in response")
+                            .size(14)
+                            .color(Color::from_rgb(0.5, 0.5, 0.5)),
+                    )
+                    .padding(16)
+                    .width(Length::Fill)
+                    .height(Length::Fill)
+                    .into()
+                } else {
+                    let cookies_list = resp.cookies.iter().fold(
+                        column![].spacing(8).padding(16),
+                        |col, cookie| {
+                            col.push(
+                                row![
+                                    container(text(&cookie.key).size(12))
+                                        .width(Length::Fixed(200.0))
+                                        .padding([4, 8]),
+                                    text(&cookie.value).size(12).color(Color::from_rgb(0.4, 0.4, 0.4)),
+                                ]
+                                .spacing(8),
+                            )
+                        },
+                    );
+                    container(scrollable(cookies_list))
+                        .width(Length::Fill)
+                        .height(Length::Fill)
+                        .into()
+                }
             }
         };
 

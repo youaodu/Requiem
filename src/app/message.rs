@@ -1,5 +1,5 @@
 use crate::app::state::ContextMenuTarget;
-use crate::models::{BodyFormat, EnvironmentOption, HttpMethod, RequestTab, Response, ResponseTab};
+use crate::models::{BodyFormat, BodyViewMode, EnvironmentOption, HttpMethod, RequestTab, Response, ResponseTab};
 use crate::ui::toast::Toast;
 use iced::widget::text_editor;
 
@@ -48,6 +48,7 @@ pub enum Message {
     // Tabs
     TabSelected(RequestTab),
     ResponseTabSelected(ResponseTab),
+    BodyViewModeSelected(BodyViewMode),
 
     // Collections and Requests
     SelectRequest(Vec<usize>), // path to the request item

@@ -60,8 +60,12 @@ impl Requiem {
                     Ok(ref response) => {
                         info!("Request completed: {} in {}ms", response.status, response.time_ms);
                         self.response = Some(response.clone());
-                        // Update text editor content with response body
+                        // Save raw response body
+                        self.raw_response_body = response.body.clone();
+                        // Update text editor content with response body (raw by default)
                         self.response_body_content = iced::widget::text_editor::Content::with_text(&response.body);
+                        // Reset to Raw mode
+                        self.active_body_view_mode = crate::models::BodyViewMode::Raw;
                     }
                     Err(ref e) => {
                         error!("Request failed: {}", e);
@@ -281,6 +285,43 @@ impl Requiem {
             }
             Message::ResponseTabSelected(tab) => {
                 self.active_response_tab = tab;
+                Task::none()
+            }
+            Message::BodyViewModeSelected(mode) => {
+                self.active_body_view_mode = mode;
+
+                // Format the response body based on the selected mode
+                let formatted_body = match mode {
+                    crate::models::BodyViewMode::Raw => {
+                        // Show raw content
+                        self.raw_response_body.clone()
+                    }
+                    crate::models::BodyViewMode::Json => {
+                        // Format as JSON
+                        match crate::utils::formatter::format_json(&self.raw_response_body) {
+                            Ok(formatted) => formatted,
+                            Err(_) => self.raw_response_body.clone(), // Fallback to raw if formatting fails
+                        }
+                    }
+                    crate::models::BodyViewMode::Xml => {
+                        // Format as XML
+                        match crate::utils::formatter::format_xml(&self.raw_response_body) {
+                            Ok(formatted) => formatted,
+                            Err(_) => self.raw_response_body.clone(), // Fallback to raw if formatting fails
+                        }
+                    }
+                    crate::models::BodyViewMode::Html => {
+                        // Format as HTML
+                        match crate::utils::formatter::format_html(&self.raw_response_body) {
+                            Ok(formatted) => formatted,
+                            Err(_) => self.raw_response_body.clone(), // Fallback to raw if formatting fails
+                        }
+                    }
+                };
+
+                // Update the text editor content with formatted body
+                self.response_body_content = iced::widget::text_editor::Content::with_text(&formatted_body);
+
                 Task::none()
             }
             Message::SelectRequest(path) => {

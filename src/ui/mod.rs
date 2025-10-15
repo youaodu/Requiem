@@ -1,5 +1,6 @@
 pub mod body_highlighter;
 pub mod components;
+pub mod icons;
 pub mod request_editor;
 pub mod request_list;
 pub mod request_tabs;

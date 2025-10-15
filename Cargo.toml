@@ -8,7 +8,7 @@ license = "MIT"
 
 [dependencies]
 # UI Framework
-iced = { version = "0.13", features = ["tokio", "advanced"] }
+iced = { version = "0.13", features = ["tokio", "advanced", "svg"] }
 
 # HTTP Client
 reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
