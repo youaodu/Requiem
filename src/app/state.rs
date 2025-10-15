@@ -1,0 +1,239 @@
+use crate::i18n::{I18n, Language, Translations};
+use crate::models::{Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
+use crate::ui::toast::Toast;
+use crate::utils::navigation;
+use iced::widget::{text_editor, text_input};
+use uuid::Uuid;
+
+#[derive(Debug, Clone)]
+pub struct RequestTabItem {
+    pub id: Uuid,
+    pub name: String,
+    pub request_path: Option<Vec<usize>>, // None for unsaved tabs
+    pub is_modified: bool,
+    pub is_new: bool, // true for unsaved new requests
+    pub draft_request: Option<Request>, // Draft request data for unsaved tabs
+    pub parent_path: Option<Vec<usize>>, // Parent path for saving new requests
+}
+
+#[derive(Debug, Clone)]
+pub struct DragState {
+    pub dragging_tab_index: usize,
+    pub hover_index: Option<usize>,
+    pub initial_mouse_x: f32, // Initial mouse X position when drag started
+    pub current_mouse_x: f32, // Current mouse X position during drag
+}
+
+#[derive(Debug, Clone)]
+pub struct TabPressState {
+    pub tab_index: usize,
+    pub press_time: std::time::Instant,
+    pub initial_x: f32,      // 鼠标按下时的初始 x 位置
+    pub last_x: f32,         // 上一次鼠标的 x 位置
+    pub delta_x: f32,        // 本次移动的 x 轴差值 (当前x - 上一次x)
+}
+
+#[derive(Debug, Clone)]
+pub enum ContextMenuTarget {
+    Request,
+    Folder,
+    Collection,
+}
+
+#[derive(Debug, Clone)]
+pub struct ContextMenu {
+    pub path: Vec<usize>,
+    pub x: f32,
+    pub y: f32,
+    pub target: ContextMenuTarget,
+}
+
+pub struct Requiem {
+    pub collections: Vec<Collection>,
+    pub selected_collection: Option<usize>,
+    pub selected_request: Option<Vec<usize>>, // path to the selected request
+    pub active_tab: RequestTab,
+    pub response: Option<Response>,
+    pub active_response_tab: ResponseTab, // Active response tab
+    pub loading: bool,
+    pub toast: Option<Toast>,
+    pub context_menu: Option<ContextMenu>,
+    pub renaming_item: Option<(Vec<usize>, String, String)>, // path, original name, current name being edited
+    pub mouse_position: (f32, f32), // Track current mouse position
+    pub search_query: String, // search query for filtering requests
+    pub open_tabs: Vec<RequestTabItem>, // Open request tabs
+    pub active_tab_index: Option<usize>, // Currently active tab index
+    pub drag_state: Option<DragState>, // Tab drag state
+    pub rename_input_id: text_input::Id, // ID for the rename text input
+    pub tab_press_state: Option<TabPressState>, // Track tab press for timing
+    pub current_environment: Environment, // Current selected environment
+    pub show_environment_dialog: bool, // Whether to show environment management dialog
+    pub response_body_content: text_editor::Content, // Text editor content for response body
+    pub request_body_content: text_editor::Content, // Text editor content for request body
+    pub language: Language, // Current UI language
+    pub translations: Translations, // Translation strings
+    pub show_settings_dialog: bool, // Whether to show settings dialog
+    pub save_directory: String, // Directory to save collections and requests
+}
+
+impl Requiem {
+    pub fn new() -> Self {
+        // Load configuration from file
+        let config = crate::config::Config::load();
+
+        // Initialize language and translations from config
+        let language = config.language;
+        let translations = Translations::new(language);
+
+        // Use save directory from config
+        let save_directory = config.save_directory.clone();
+
+        // Try to load collections from disk
+        let collections = match crate::storage::load_collections(&save_directory) {
+            Ok(loaded_collections) => {
+                if loaded_collections.is_empty() {
+                    tracing::info!("No saved collections found, starting with empty collections");
+                } else {
+                    tracing::info!("Loaded {} collections from disk", loaded_collections.len());
+                }
+                loaded_collections
+            }
+            Err(e) => {
+                tracing::error!("Failed to load collections: {}", e);
+                vec![]
+            }
+        };
+
+        // Get first request for initial tab (if available)
+        let (open_tabs, selected_request, selected_collection) = if let Some(first_coll) = collections.first() {
+            if let Some(CollectionItem::Request(first_req)) = first_coll.items.first() {
+                let first_tab = RequestTabItem {
+                    id: first_req.id,
+                    name: first_req.name.clone(),
+                    request_path: Some(vec![0, 0]),
+                    is_modified: false,
+                    is_new: false,
+                    draft_request: None,
+                    parent_path: None,
+                };
+                (vec![first_tab], Some(vec![0, 0]), Some(0))
+            } else {
+                (vec![], None, Some(0))
+            }
+        } else {
+            (vec![], None, None)
+        };
+
+        let active_tab_index = if open_tabs.is_empty() { None } else { Some(0) };
+
+        Self {
+            collections,
+            selected_collection,
+            selected_request,
+            active_tab: RequestTab::Body,
+            response: None,
+            active_response_tab: ResponseTab::Body,
+            loading: false,
+            toast: None,
+            context_menu: None,
+            renaming_item: None,
+            mouse_position: (0.0, 0.0),
+            search_query: String::new(),
+            open_tabs,
+            active_tab_index,
+            drag_state: None,
+            rename_input_id: text_input::Id::unique(),
+            tab_press_state: None,
+            current_environment: Environment::default(),
+            show_environment_dialog: false,
+            response_body_content: text_editor::Content::new(),
+            request_body_content: text_editor::Content::new(),
+            language,
+            translations,
+            show_settings_dialog: false,
+            save_directory,
+        }
+    }
+
+    pub fn get_current_request(&self) -> Option<&Request> {
+        // Check if active tab is an unsaved new request
+        if let Some(active_idx) = self.active_tab_index {
+            if let Some(tab) = self.open_tabs.get(active_idx) {
+                if tab.is_new {
+                    return tab.draft_request.as_ref();
+                }
+            }
+        }
+
+        // Otherwise get from collection
+        let path = self.selected_request.as_ref()?;
+        self.get_item_by_path(path).and_then(|item| {
+            if let CollectionItem::Request(req) = item {
+                Some(req)
+            } else {
+                None
+            }
+        })
+    }
+
+    pub fn get_current_request_mut(&mut self) -> Option<&mut Request> {
+        // Check if active tab is an unsaved new request
+        if let Some(active_idx) = self.active_tab_index {
+            if self.open_tabs.get(active_idx).map(|t| t.is_new).unwrap_or(false) {
+                // Return draft request from tab
+                return self.open_tabs.get_mut(active_idx)
+                    .and_then(|tab| tab.draft_request.as_mut());
+            }
+        }
+
+        // Otherwise get from collection
+        let path = self.selected_request.clone()?;
+        self.get_item_by_path_mut(&path).and_then(|item| {
+            if let CollectionItem::Request(req) = item {
+                Some(req)
+            } else {
+                None
+            }
+        })
+    }
+
+    pub fn get_item_by_path(&self, path: &[usize]) -> Option<&CollectionItem> {
+        navigation::get_item_by_path(&self.collections, path)
+    }
+
+    pub fn get_item_by_path_mut(&mut self, path: &[usize]) -> Option<&mut CollectionItem> {
+        navigation::get_item_by_path_mut(&mut self.collections, path)
+    }
+
+    /// Save a specific collection to disk
+    pub fn save_collection(&self, collection_index: usize) -> Result<(), String> {
+        if let Some(collection) = self.collections.get(collection_index) {
+            crate::storage::save_collection(&self.save_directory, collection)
+        } else {
+            Err(format!("Collection at index {} not found", collection_index))
+        }
+    }
+
+    /// Save all collections to disk
+    pub fn save_all_collections(&self) -> Result<(), String> {
+        for collection in &self.collections {
+            crate::storage::save_collection(&self.save_directory, collection)?;
+        }
+        Ok(())
+    }
+
+    /// Delete a collection from disk
+    pub fn delete_collection_file(&self, collection_id: &uuid::Uuid) -> Result<(), String> {
+        crate::storage::delete_collection(&self.save_directory, collection_id)
+    }
+}
+
+impl I18n for Requiem {
+    fn t<'a>(&'a self, key: &'a str) -> &'a str {
+        self.translations.get(key)
+    }
+
+    fn language(&self) -> Language {
+        self.language
+    }
+}

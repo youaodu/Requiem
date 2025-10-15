@@ -1,0 +1,267 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+**Requiem** is a lightweight, high-performance HTTP client built with Rust and iced. It targets 50-100MB memory usage (vs Postman's 300-500MB) with <1s startup time. The project aims to be a developer-friendly alternative to Postman with offline-first design, Git-friendly text storage, and native performance.
+
+**Tech Stack:**
+- Language: Rust 2021
+- UI Framework: iced 0.13 (native Elm-architecture GUI)
+- HTTP Client: reqwest 0.12 with tokio async runtime
+- Syntax Highlighting: syntect 5
+
+## Build & Development Commands
+
+### Basic Commands
+```bash
+# Run in development mode (most common)
+cargo run
+
+# Build for release
+cargo build --release
+
+# Run tests
+cargo test
+
+# Check code without building
+cargo check
+
+# Format code
+cargo fmt
+
+# Lint with clippy
+cargo clippy
+```
+
+### Debugging
+```bash
+# Run with debug logs
+RUST_LOG=debug cargo run
+
+# Run with full backtrace
+RUST_BACKTRACE=1 cargo run
+
+# Combined debug mode
+RUST_LOG=trace RUST_BACKTRACE=full cargo run
+
+# Use the debug script
+./debug.sh run      # Standard debug mode
+./debug.sh trace    # Full trace mode
+```
+
+### Performance Analysis
+```bash
+# Memory profiling with heaptrack
+./debug.sh mem
+
+# CPU profiling with perf
+./debug.sh perf
+```
+
+## Architecture
+
+### Module Structure
+
+The codebase follows a clean modular architecture:
+
+```
+src/
+├── main.rs              # Entry point, iced app setup
+├── i18n.rs              # Internationalization support (English/Chinese)
+├── http_client.rs       # HTTP request execution (reqwest wrapper)
+├── models/              # Core data models
+│   ├── mod.rs
+│   ├── body.rs          # Request body types (JSON, Form, etc.)
+│   ├── collection.rs    # Collection and folder structures
+│   ├── environment.rs   # Environment variables
+│   ├── http_method.rs   # HTTP methods enum
+│   ├── key_value.rs     # Key-value pairs (headers, params)
+│   ├── request.rs       # Request model
+│   ├── request_tab.rs   # Request tab types
+│   ├── response.rs      # Response model
+│   └── response_tab.rs  # Response tab types
+├── app/                 # Application layer
+│   ├── mod.rs
+│   ├── state.rs         # Application state (Requiem struct)
+│   ├── message.rs       # Message enum (Elm architecture)
+│   └── update.rs        # State updates and business logic
+├── ui/                  # User interface
+│   ├── mod.rs
+│   ├── view.rs          # Main view composition
+│   ├── request_editor.rs    # Request configuration UI
+│   ├── request_list.rs      # Collection/sidebar UI
+│   ├── request_tabs.rs      # Tab management UI
+│   ├── response_viewer.rs   # Response display UI
+│   ├── toast.rs         # Toast notification component
+│   ├── underline_input.rs   # Custom input component
+│   ├── body_highlighter.rs  # Syntax highlighting
+│   └── components/      # Reusable UI components
+│       ├── code_editor.rs
+│       ├── context_menu.rs
+│       ├── environment_dialog.rs
+│       ├── environment_picker.rs
+│       ├── language_picker.rs
+│       ├── method_picker.rs
+│       ├── settings_dialog.rs
+│       ├── tabs_bar.rs
+│       └── textarea.rs
+└── utils/               # Utility functions
+    ├── mod.rs
+    └── navigation.rs    # Navigation helpers
+```
+
+### State Management (Elm Architecture)
+
+The app uses iced's Elm architecture pattern:
+
+1. **State** (`app/state.rs`): Contains all application state in the `Requiem` struct
+2. **Message** (`app/message.rs`): Enum of all possible user interactions and events
+3. **Update** (`app/update.rs`): Pure function that transforms state based on messages
+4. **View** (`ui/view.rs`): Renders UI from current state
+
+Example flow:
+```
+User clicks "Send" → Message::SendRequest
+→ update() executes HTTP request
+→ Message::RequestCompleted(response)
+→ update() stores response in state
+→ view() re-renders with new response
+```
+
+### Key Data Models
+
+- **Request** (`models/request.rs`): HTTP request configuration (method, URL, headers, body, params, auth, cookies)
+- **Response** (`models/response.rs`): HTTP response data (status, headers, body, timing)
+- **Collection** (`models/collection.rs`): Hierarchical structure of requests and folders
+- **CollectionItem**: Enum of Request or Folder (tree structure)
+- **BodyType** / **BodyFormat** (`models/body.rs`): JSON, Form-urlencoded, Multipart, Raw, Binary, GraphQL, Msgpack
+- **HttpMethod** (`models/http_method.rs`): GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS
+- **Environment** (`models/environment.rs`): Environment configuration with variables
+- **KeyValue** (`models/key_value.rs`): Generic key-value pairs for headers, params, cookies, auth
+- **RequestTab** / **ResponseTab**: Tab types for organizing UI tabs
+
+### UI Components
+
+The UI is built with reusable components in `ui/components/`:
+- **code_editor**: Syntax-highlighted code editor for request/response bodies
+- **context_menu**: Right-click context menu for requests/folders
+- **environment_dialog**: Dialog for managing environments and variables
+- **environment_picker**: Dropdown to select active environment
+- **language_picker**: Language selection dropdown (i18n)
+- **method_picker**: HTTP method selector (GET, POST, etc.)
+- **settings_dialog**: Application settings dialog
+- **tabs_bar**: Tab bar for managing multiple request tabs
+- **textarea**: Multi-line text input component
+
+Key UI state includes:
+- **DragState**: Tab drag-and-drop state tracking
+- **TabPressState**: Mouse press state for tab interactions
+- **ContextMenu**: Context menu display state and position
+
+## Development Guidelines
+
+### Internationalization (i18n)
+
+The app supports multiple languages (currently English and Chinese) through the i18n module:
+- Language configuration in `src/i18n.rs`
+- Translation files should be loaded from JSON (with fallback strings in code)
+- UI strings accessible via `Translations::get(key)` method
+- Switch languages through Settings dialog
+
+### Font Configuration
+
+The app uses Source Han Sans CN for Chinese character support, loaded from:
+```
+/usr/share/fonts/adobe-source-han-sans/SourceHanSansCN-Regular.otf
+```
+
+If building on a system without this font, either:
+1. Install adobe-source-han-sans-otf-fonts package (Arch Linux)
+2. Update font path in `src/main.rs:30`
+3. Comment out font loading (lines 30-31) for default system font
+
+### Logging
+
+Use tracing for structured logging:
+```rust
+use tracing::{info, debug, warn, error};
+
+info!("Starting request");
+debug!("Request body: {:?}", body);
+```
+
+Control log level with `RUST_LOG` environment variable.
+
+### VS Code Debugging
+
+Press F5 to launch debugger (requires rust-analyzer and CodeLLDB extensions).
+Configuration in `.vscode/launch.json` sets `RUST_LOG=debug` automatically.
+
+### Performance Targets
+
+Keep in mind the project's performance goals:
+- Memory usage: Target <100MB, max 200MB
+- Startup time: Target <1s
+- Binary size: Target <30MB, max 50MB (release build with strip=true)
+
+Monitor with `./debug.sh mem` and `./debug.sh perf`.
+
+## Project Status
+
+Currently in MVP phase (v0.1.0) with core HTTP client functionality implemented:
+- ✅ Request editor with method, URL, headers, query params, body support
+- ✅ Multiple body formats (JSON, Form-data, Raw text)
+- ✅ Collection/folder organization with drag-and-drop
+- ✅ Tab-based request management
+- ✅ Response viewer with syntax highlighting
+- ✅ Environment variables support
+- ✅ Authentication (Bearer, Basic, API Key)
+- ✅ Context menus for request/folder operations
+- ✅ Settings dialog with language selection
+- ✅ Toast notifications
+- ✅ Keyboard shortcuts
+- ✅ Internationalization (English/Chinese)
+
+See `idea.md` for full feature roadmap and architectural details.
+
+## Debugging Rules for Claude Code
+
+**IMPORTANT**: When working on this project and needing to run or test the application:
+
+1. **NEVER run the application automatically** - Always provide the command for the user to run manually
+2. **Provide clear, ready-to-copy commands** - Format commands in code blocks
+3. **Explain what to test** - Tell the user what behavior to verify after running
+
+### Example Workflow
+
+When implementing a feature that requires testing:
+
+```markdown
+I've implemented the feature. Please test it by running:
+
+​```bash
+cargo run
+​```
+
+Then verify:
+- Click on the X button to test...
+- Check that the Y behavior works...
+```
+
+### Common Test Commands to Provide
+
+```bash
+# Standard run
+cargo run
+
+# With debug logging
+RUST_LOG=debug cargo run
+
+# Clean build and run
+cargo clean && cargo run
+
+# Release mode (for performance testing)
+cargo build --release && ./target/release/requiem
+```

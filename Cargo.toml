@@ -1,0 +1,38 @@
+[package]
+name = "requiem"
+version = "0.1.0"
+edition = "2021"
+authors = ["Your Name <you@example.com>"]
+description = "A lightweight HTTP client - lighter, faster, more geek-friendly"
+license = "MIT"
+
+[dependencies]
+# UI Framework
+iced = { version = "0.13", features = ["tokio", "advanced"] }
+
+# HTTP Client
+reqwest = { version = "0.12", features = ["json", "multipart", "stream"] }
+tokio = { version = "1", features = ["full"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+# Syntax Highlighting
+syntect = "5"
+
+# Utilities
+anyhow = "1"
+chrono = "0.4"
+uuid = { version = "1", features = ["v4", "serde"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dirs = "5"
+rfd = "0.15"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
