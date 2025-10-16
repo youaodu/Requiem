@@ -10,7 +10,7 @@ use crate::ui::components::{code_editor, /* environment_picker, */ key_value_edi
 pub fn view<'a>(
     request: &'a Request,
     active_tab: RequestTab,
-    current_env: Environment,
+    _current_env: Environment,
     body_content: &'a text_editor::Content,
     translations: &'a Translations,
 ) -> Element<'a, Message> {

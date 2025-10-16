@@ -1,4 +1,4 @@
-use iced::widget::{button, container, mouse_area, scrollable, text, text_input, Column, Row};
+use iced::widget::{button, container, mouse_area, scrollable, text, text_input, Column, Row, Id};
 use iced::{Alignment, Element, Length, Padding};
 
 use crate::app::Message;
@@ -13,7 +13,7 @@ pub fn view<'a>(
     _context_menu: Option<&crate::app::state::ContextMenu>,
     renaming_item: Option<&(Vec<usize>, String, String)>,
     search_query: &'a str,
-    rename_input_id: &text_input::Id,
+    rename_input_id: &Id,
     translations: &'a Translations,
 ) -> Element<'a, Message> {
     let mut sidebar = Column::new()
@@ -130,6 +130,10 @@ pub fn view<'a>(
     let scrollable_content = scrollable(collections_column)
         .height(Length::Fill);
 
+    // Wrap scrollable in mouse_area to detect right-click on empty area
+    let scrollable_with_context = mouse_area(scrollable_content)
+        .on_right_press(Message::ShowContextMenu(vec![], 0.0, 0.0, ContextMenuTarget::EmptyArea));
+
     // Settings button at the bottom
     let settings_button = button(
         Row::new()
@@ -146,7 +150,7 @@ pub fn view<'a>(
     // Build final layout: header + scrollable content + settings button
     let final_column = Column::new()
         .push(sidebar)
-        .push(scrollable_content)
+        .push(scrollable_with_context)
         .push(settings_button);
 
     container(final_column)
@@ -162,7 +166,7 @@ fn render_items<'a>(
     depth: usize,
     mut column: Column<'a, Message>,
     renaming_item: Option<&(Vec<usize>, String, String)>,
-    rename_input_id: &text_input::Id,
+    rename_input_id: &Id,
     translations: &'a Translations,
 ) -> Column<'a, Message> {
     // Separate folders and requests

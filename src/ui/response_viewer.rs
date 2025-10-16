@@ -35,7 +35,7 @@ pub fn view<'a>(
         // Show loading state
         container(
             column![
-                Space::with_height(40),
+                Space::new().height(40),
                 container(
                     text("Loading...")
                         .size(16)
@@ -43,7 +43,7 @@ pub fn view<'a>(
                 )
                 .width(Length::Fill)
                 .center_x(Length::Fill),
-                Space::with_height(12),
+                Space::new().height(12),
                 container(icons::loading_icon(32))
                     .width(Length::Fill)
                     .center_x(Length::Fill),
@@ -110,19 +110,19 @@ pub fn view<'a>(
 
         let header_bar = row![
             tab_buttons,
-            Space::with_width(Length::Fill),
+            Space::new().width(Length::Fill),
             text("Status:").size(14),
-            Space::with_width(8),
+            Space::new().width(8),
             text(format!("{} {}", resp.status, resp.status_text))
                 .size(14)
                 .color(status_color),
-            Space::with_width(20),
+            Space::new().width(20),
             text("Time:").size(14),
-            Space::with_width(8),
+            Space::new().width(8),
             text(format!("{}ms", resp.time_ms)).size(14),
-            Space::with_width(20),
+            Space::new().width(20),
             text("Size:").size(14),
-            Space::with_width(8),
+            Space::new().width(8),
             text(format!("{} bytes", resp.size_bytes)).size(14),
         ]
         .spacing(0)
@@ -290,7 +290,7 @@ pub fn view<'a>(
                 )
                 .width(Length::Fill)
                 .center_x(Length::Fill),
-                Space::with_height(8),
+                Space::new().height(8),
                 container(
                     text(error)
                         .size(14)

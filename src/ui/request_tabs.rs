@@ -61,9 +61,10 @@ pub fn view<'a>(
                 },
                 border: iced::Border::default(),
                 shadow: iced::Shadow::default(),
+                snap: false,
             });
 
-        let tab_content = row![tab_name, Space::with_width(6), close_button]
+        let tab_content = row![tab_name, Space::new().width(6), close_button]
             .spacing(2)
             .padding([4, 8]);
 
@@ -97,6 +98,7 @@ pub fn view<'a>(
                         radius: iced::border::Radius::from(4.0),
                     },
                     shadow: iced::Shadow::default(),
+                    snap: false,
                 }
             });
 

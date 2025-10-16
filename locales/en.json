@@ -46,6 +46,7 @@
   "example_project": "Example Project",
   "ctx_new_request": "New Request",
   "ctx_new_folder": "New Folder",
+  "ctx_new_collection": "New Collection",
   "ctx_rename": "Rename",
   "ctx_delete": "Delete",
   "ctx_duplicate": "Duplicate",

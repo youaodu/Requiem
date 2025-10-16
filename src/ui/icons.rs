@@ -20,8 +20,8 @@ pub const SETTINGS_ICON: &str = r##"<svg viewBox="0 0 1024 1024" xmlns="http://w
 /// An SVG element that can be used in the UI
 pub fn loading_icon<'a, Message: 'a>(size: u16) -> Element<'a, Message> {
     svg(svg::Handle::from_memory(LOADING_ICON.as_bytes()))
-        .width(size)
-        .height(size)
+        .width(size as f32)
+        .height(size as f32)
         .into()
 }
 
@@ -34,7 +34,7 @@ pub fn loading_icon<'a, Message: 'a>(size: u16) -> Element<'a, Message> {
 /// An SVG element that can be used in the UI
 pub fn settings_icon<'a, Message: 'a>(size: u16) -> Element<'a, Message> {
     svg(svg::Handle::from_memory(SETTINGS_ICON.as_bytes()))
-        .width(size)
-        .height(size)
+        .width(size as f32)
+        .height(size as f32)
         .into()
 }

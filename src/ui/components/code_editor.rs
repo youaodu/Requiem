@@ -31,7 +31,6 @@ pub fn view<'a, Message: Clone + 'a>(
                     width: 0.0,
                     radius: iced::border::Radius::from(0.0),
                 },
-                icon: Color::from_rgb(0.5, 0.5, 0.5),
                 placeholder: Color::from_rgb(0.7, 0.7, 0.7),
                 value: Color::from_rgb(0.2, 0.2, 0.2),
                 selection: Color::from_rgb(0.6, 0.7, 0.9),

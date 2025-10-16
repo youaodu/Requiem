@@ -1,4 +1,4 @@
-use iced::widget::{column, container, horizontal_rule, mouse_area, row, stack, text, vertical_rule};
+use iced::widget::{column, container, mouse_area, row, stack, text};
 use iced::{Alignment, Element, Length};
 
 use crate::app::{Message, Requiem};
@@ -49,7 +49,13 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
             container(request_editor_panel)
                 .width(Length::Fill)
                 .height(Length::FillPortion(1)),
-            horizontal_rule(1),
+            container("")
+                .width(Length::Fill)
+                .height(1)
+                .style(|_theme: &iced::Theme| iced::widget::container::Style {
+                    background: Some(iced::Background::Color(iced::Color::from_rgb(0.8, 0.8, 0.8))),
+                    ..Default::default()
+                }),
             container(response_panel)
                 .width(Length::Fill)
                 .height(Length::FillPortion(1))
@@ -76,7 +82,13 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
         container(request_list_panel)
             .width(Length::Fixed(280.0))
             .height(Length::Fill),
-        vertical_rule(1),
+        container("")
+            .width(1)
+            .height(Length::Fill)
+            .style(|_theme: &iced::Theme| iced::widget::container::Style {
+                background: Some(iced::Background::Color(iced::Color::from_rgb(0.8, 0.8, 0.8))),
+                ..Default::default()
+            }),
         main_content
     ]
     .spacing(0);

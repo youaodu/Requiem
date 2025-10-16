@@ -46,6 +46,7 @@
   "example_project": "示例项目",
   "ctx_new_request": "新建请求",
   "ctx_new_folder": "新建文件夹",
+  "ctx_new_collection": "新建集合",
   "ctx_rename": "重命名",
   "ctx_delete": "删除",
   "ctx_duplicate": "复制",

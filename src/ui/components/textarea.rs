@@ -118,7 +118,7 @@ where
         let mut editor = text_editor(self.content)
             .height(self.height)
             .padding(self.padding)
-            .size(self.font_size);
+            .size(self.font_size as f32);
 
         // Add placeholder if not empty
         if !placeholder.is_empty() {
@@ -142,7 +142,6 @@ where
                         width: 0.0,
                         radius: 0.0.into(),
                     },
-                    icon: Color::WHITE, // Make cursor same color as background to hide it
                     placeholder: Color::from_rgb(0.7, 0.7, 0.7),
                     value: Color::BLACK,
                     selection: Color::from_rgb(0.7, 0.85, 1.0),

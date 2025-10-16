@@ -1,4 +1,4 @@
-use iced::widget::{container, text_input, Column};
+use iced::widget::{container, text_input, Column, Id};
 use iced::{Border, Element, Length, Padding, Theme};
 
 /// A text input component with an underline style (dashed line below the text)
@@ -11,7 +11,7 @@ pub fn underline_input<'a, Message: 'a>(
 where
     Message: Clone,
 {
-    let id = text_input::Id::unique();
+    let id = Id::unique();
 
     let mut input = text_input(placeholder, value)
         .id(id.clone())
@@ -62,7 +62,7 @@ where
 
 /// A text input component with an underline style and configurable size
 pub fn underline_input_sized<'a, Message: 'a>(
-    id: text_input::Id,
+    id: Id,
     placeholder: &str,
     value: &str,
     size: u16,
@@ -76,7 +76,7 @@ where
         .id(id)
         .on_input(on_input)
         .padding(Padding::new(4.0).left(0.0).right(0.0))
-        .size(size)
+        .size(size as f32)
         .style(|theme: &Theme, status| {
             // Remove all borders from the input
             text_input::Style {

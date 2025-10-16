@@ -1,4 +1,5 @@
 use iced::Task;
+use iced::widget::operation::{focus, select_all};
 use tracing::{debug, error, info};
 use uuid::Uuid;
 
@@ -60,21 +61,26 @@ impl Requiem {
             let _ = self.update(Message::ConfirmRename);
         }
 
+        let folder_name = "New Folder".to_string();
         let new_folder = CollectionItem::Folder(Folder {
             id: Uuid::new_v4(),
-            name: "New Folder".to_string(),
+            name: folder_name.clone(),
             items: vec![],
             expanded: true,
         });
 
         let collection_idx = parent_path[0];
+        let mut new_folder_path = parent_path.clone();
+
         if parent_path.len() == 1 {
             if let Some(collection) = self.collections.get_mut(collection_idx) {
                 collection.items.push(new_folder);
+                new_folder_path.push(collection.items.len() - 1);
             }
         } else {
             if let Some(CollectionItem::Folder(folder)) = self.get_item_by_path_mut(&parent_path) {
                 folder.items.push(new_folder);
+                new_folder_path.push(folder.items.len() - 1);
             }
         }
 
@@ -83,7 +89,15 @@ impl Requiem {
         }
 
         self.context_menu = None;
-        Task::none()
+
+        // Set renaming state to auto-edit the new folder name
+        self.renaming_item = Some((new_folder_path, folder_name.clone(), folder_name));
+
+        // Focus and select the rename input
+        Task::batch([
+            focus(self.rename_input_id.clone()),
+            select_all(self.rename_input_id.clone()),
+        ])
     }
 
     /// Delete item from collection
@@ -93,10 +107,66 @@ impl Requiem {
             let _ = self.update(Message::ConfirmRename);
         }
 
-        if path.len() < 2 {
+        if path.is_empty() {
             return Task::none();
         }
 
+        // Delete entire collection
+        if path.len() == 1 {
+            let collection_idx = path[0];
+            if collection_idx < self.collections.len() {
+                let collection = self.collections.remove(collection_idx);
+
+                // Delete the collection file
+                if let Err(e) = self.delete_collection_file(&collection.id) {
+                    error!("Failed to delete collection file: {}", e);
+                }
+
+                // Clear selection if it was in this collection
+                if let Some(selected_path) = &self.selected_request {
+                    if selected_path.first() == Some(&collection_idx) {
+                        self.selected_request = None;
+                        self.response = None;
+                    }
+                }
+
+                // Update selected_collection index if needed
+                if self.selected_collection == Some(collection_idx) {
+                    self.selected_collection = None;
+                } else if let Some(selected) = self.selected_collection {
+                    if selected > collection_idx {
+                        self.selected_collection = Some(selected - 1);
+                    }
+                }
+
+                // Close tabs that belong to this collection
+                self.open_tabs.retain(|tab| {
+                    if let Some(tab_path) = &tab.request_path {
+                        tab_path.first() != Some(&collection_idx)
+                    } else if let Some(parent_path) = &tab.parent_path {
+                        parent_path.first() != Some(&collection_idx)
+                    } else {
+                        true
+                    }
+                });
+
+                // Update active tab index if needed
+                if let Some(active_idx) = self.active_tab_index {
+                    if active_idx >= self.open_tabs.len() {
+                        self.active_tab_index = if self.open_tabs.is_empty() {
+                            None
+                        } else {
+                            Some(self.open_tabs.len() - 1)
+                        };
+                    }
+                }
+            }
+
+            self.context_menu = None;
+            return Task::none();
+        }
+
+        // Delete item within collection
         let parent_path = &path[..path.len() - 1];
         let item_idx = path[path.len() - 1];
         let collection_idx = path[0];
@@ -231,13 +301,18 @@ impl Requiem {
             error!("Failed to save new collection: {}", e);
         }
 
+        self.context_menu = None;
         self.renaming_item = Some((vec![new_coll_idx], default_name.clone(), default_name));
-        Task::none()
+
+        // Focus and select the rename input
+        Task::batch([
+            focus(self.rename_input_id.clone()),
+            select_all(self.rename_input_id.clone()),
+        ])
     }
 
     /// Start renaming an item
     pub fn handle_start_rename(&mut self, path: Vec<usize>) -> Task<Message> {
-        use iced::widget::text_input;
 
         let name = if path.len() == 1 {
             self.collections.get(path[0]).map(|c| c.name.clone())
@@ -254,8 +329,8 @@ impl Requiem {
         self.context_menu = None;
 
         Task::batch([
-            text_input::focus(self.rename_input_id.clone()),
-            text_input::select_all(self.rename_input_id.clone()),
+            focus(self.rename_input_id.clone()),
+            select_all(self.rename_input_id.clone()),
         ])
     }
 

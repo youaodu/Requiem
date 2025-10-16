@@ -1,4 +1,4 @@
-use iced::widget::{button, column, container, mouse_area, row, text, Space};
+use iced::widget::{button, column, container, mouse_area, row, text};
 use iced::{Element, Length};
 
 use crate::app::Message;
@@ -12,6 +12,7 @@ pub fn view<'a>(path: &[usize], x: f32, y: f32, target: &ContextMenuTarget, tran
             text_color: iced::Color::from_rgb(0.2, 0.2, 0.2),
             border: iced::Border::default(),
             shadow: iced::Shadow::default(),
+            snap: false,
         };
 
         match status {
@@ -77,6 +78,16 @@ pub fn view<'a>(path: &[usize], x: f32, y: f32, target: &ContextMenuTarget, tran
                     .style(menu_item_style)
             );
         }
+        ContextMenuTarget::EmptyArea => {
+            // For empty area, only show New Collection
+            menu_items = menu_items.push(
+                button(text(translations.get("ctx_new_collection")).size(12))
+                    .on_press(Message::AddNewCollection)
+                    .width(Length::Fixed(150.0))
+                    .padding([6, 12])
+                    .style(menu_item_style)
+            );
+        }
     }
 
     let menu_container = container(menu_items)
@@ -95,13 +106,23 @@ pub fn view<'a>(path: &[usize], x: f32, y: f32, target: &ContextMenuTarget, tran
             ..Default::default()
         });
 
-    // Position the menu at the cursor position using spacers
-    let vertical_spacer = Space::new(Length::Fixed(0.0), Length::Fixed(y));
-    let horizontal_spacer = Space::new(Length::Fixed(x), Length::Fixed(0.0));
-
+    // Position the menu at the cursor position
+    // Create a layout that positions the menu at specific coordinates
     let positioned_menu = column![
-        vertical_spacer,
-        row![horizontal_spacer, menu_container]
+        row![
+            container(text("")).width(Length::Fill).height(Length::Fill)
+        ]
+        .height(Length::Fixed(y)),
+        row![
+            container(text("")).width(Length::Fixed(x)).height(Length::Fill),
+            menu_container,
+            container(text("")).width(Length::Fill).height(Length::Fill)
+        ]
+        .height(Length::Shrink),
+        row![
+            container(text("")).width(Length::Fill).height(Length::Fill)
+        ]
+        .height(Length::Fill)
     ]
     .width(Length::Fill)
     .height(Length::Fill);

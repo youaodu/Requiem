@@ -107,6 +107,7 @@ pub fn view<'a, Message: 'a>(toast: &'a Toast) -> Element<'a, Message> {
                 offset: iced::Vector::new(0.0, 4.0),
                 blur_radius: 12.0,
             },
+            snap: false,
         })
         .into()
 }

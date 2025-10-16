@@ -2,7 +2,9 @@ use crate::i18n::{I18n, Language, Translations};
 use crate::models::{BodyViewMode, Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
 use crate::ui::toast::Toast;
 use crate::utils::navigation;
-use iced::widget::{text_editor, text_input};
+use iced::widget::{text_editor, Id};
+use iced::{Element, event, keyboard, mouse, Event, Subscription};
+use crate::app::Message;
 use uuid::Uuid;
 
 #[derive(Debug, Clone)]
@@ -38,6 +40,7 @@ pub enum ContextMenuTarget {
     Request,
     Folder,
     Collection,
+    EmptyArea, // Empty area in request list for creating new collections
 }
 
 #[derive(Debug, Clone)]
@@ -67,7 +70,7 @@ pub struct Requiem {
     pub open_tabs: Vec<RequestTabItem>, // Open request tabs
     pub active_tab_index: Option<usize>, // Currently active tab index
     pub drag_state: Option<DragState>, // Tab drag state
-    pub rename_input_id: text_input::Id, // ID for the rename text input
+    pub rename_input_id: Id, // ID for the rename text input
     pub tab_press_state: Option<TabPressState>, // Track tab press for timing
     pub current_environment: Environment, // Current selected environment
     pub show_environment_dialog: bool, // Whether to show environment management dialog
@@ -148,7 +151,7 @@ impl Requiem {
             open_tabs,
             active_tab_index,
             drag_state: None,
-            rename_input_id: text_input::Id::unique(),
+            rename_input_id: Id::unique(),
             tab_press_state: None,
             current_environment: Environment::default(),
             show_environment_dialog: false,
@@ -231,6 +234,66 @@ impl Requiem {
     /// Delete a collection from disk
     pub fn delete_collection_file(&self, collection_id: &uuid::Uuid) -> Result<(), String> {
         crate::storage::delete_collection(&self.save_directory, collection_id)
+    }
+
+    /// View function for iced application
+    pub fn view(&self) -> Element<'_, Message> {
+        crate::ui::view(self)
+    }
+
+    /// Subscription function for iced application
+    pub fn subscription(&self) -> Subscription<Message> {
+        event::listen_with(Self::handle_event)
+    }
+
+    /// Handle events for the application
+    fn handle_event(event: Event, status: event::Status, _window: iced::window::Id) -> Option<Message> {
+        // Always handle mouse events globally, even if captured
+        if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
+            return Some(Message::MouseMoved(position.x, position.y));
+        }
+
+        // Only handle other events if not captured by widgets
+        if matches!(status, event::Status::Captured) {
+            return None;
+        }
+
+        match event {
+            Event::Keyboard(keyboard::Event::KeyPressed {
+                key,
+                modifiers,
+                ..
+            }) => {
+                match &key {
+                    keyboard::Key::Character(c) if modifiers.contains(keyboard::Modifiers::CTRL) && c == "s" => {
+                        return Some(Message::SaveRequest);
+                    }
+                    keyboard::Key::Named(keyboard::key::Named::Escape) => {
+                        return Some(Message::CancelRename);
+                    }
+                    keyboard::Key::Named(keyboard::key::Named::ArrowLeft) => {
+                        return Some(Message::MoveActiveTabLeft);
+                    }
+                    keyboard::Key::Named(keyboard::key::Named::ArrowRight) => {
+                        return Some(Message::MoveActiveTabRight);
+                    }
+                    _ => {}
+                }
+            }
+            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
+                // End drag when left mouse button is released
+                // Also trigger tab press end with current mouse position
+                return Some(Message::TabDragEnd);
+            }
+            _ => {}
+        }
+        None
+    }
+}
+
+impl Default for Requiem {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
