@@ -26,12 +26,27 @@ pub fn main() -> iced::Result {
 
     info!("Starting Requiem v{}", env!("CARGO_PKG_VERSION"));
 
-    iced::application(title, update, view)
+    let app = iced::application(title, update, view)
         .subscription(subscription)
-        .theme(|_| Theme::Light)
+        .theme(|_| Theme::Light);
+
+    // Load custom font on Linux where the path exists
+    #[cfg(target_os = "linux")]
+    let app = app
         .font(include_bytes!("/usr/share/fonts/adobe-source-han-sans/SourceHanSansCN-Regular.otf"))
-        .default_font(iced::Font::with_name("Source Han Sans CN"))
-        .window_size((1280.0, 800.0))
+        .default_font(iced::Font::with_name("Source Han Sans CN"));
+
+    // On macOS, use system fonts that support Chinese
+    #[cfg(target_os = "macos")]
+    let app = app
+        .default_font(iced::Font {
+            family: iced::font::Family::Name("PingFang SC"),
+            weight: iced::font::Weight::Normal,
+            stretch: iced::font::Stretch::Normal,
+            style: iced::font::Style::Normal,
+        });
+
+    app.window_size((1280.0, 800.0))
         .resizable(true)
         .window(iced::window::Settings {
             min_size: Some(Size::new(1280.0, 800.0)),
