@@ -30,6 +30,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dirs = "5"
 rfd = "0.15"
+image = "0.25"
 
 [profile.release]
 opt-level = 3

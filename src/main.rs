@@ -8,9 +8,13 @@ mod ui;
 mod utils;
 
 use iced::{Size, Task, Theme};
+use iced::window;
 use tracing::info;
 
 use app::Requiem;
+
+// Embed logo at compile time
+const LOGO_BYTES: &[u8] = include_bytes!("resources/logo.png");
 
 pub fn main() -> iced::Result {
     // Initialize logging
@@ -22,6 +26,9 @@ pub fn main() -> iced::Result {
         .init();
 
     info!("Starting Requiem v{}", env!("CARGO_PKG_VERSION"));
+
+    // Load window icon
+    let icon = load_icon();
 
     let app = iced::application(
         || (Requiem::new(), Task::none()),
@@ -52,6 +59,7 @@ pub fn main() -> iced::Result {
         .resizable(true)
         .window(iced::window::Settings {
             min_size: Some(Size::new(1280.0, 800.0)),
+            icon: icon.ok(),
             platform_specific: iced::window::settings::PlatformSpecific {
                 #[cfg(target_os = "linux")]
                 application_id: String::from("com.requiem.app"),
@@ -68,4 +76,17 @@ fn update(state: &mut Requiem, msg: app::Message) -> Task<app::Message> {
 
 fn view(state: &Requiem) -> iced::Element<'_, app::Message> {
     state.view()
+}
+
+/// Load application icon from embedded PNG
+fn load_icon() -> Result<window::Icon, Box<dyn std::error::Error>> {
+    let image = image::load_from_memory(LOGO_BYTES)?;
+    let rgba = image.to_rgba8();
+    let (width, height) = rgba.dimensions();
+    let raw_pixels = rgba.into_raw();
+
+    // Try to create icon from RGBA data
+    let icon = window::icon::from_rgba(raw_pixels, width, height)
+        .map_err(|e| format!("Failed to create icon: {:?}", e))?;
+    Ok(icon)
 }
