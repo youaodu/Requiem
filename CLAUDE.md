@@ -265,3 +265,77 @@ cargo clean && cargo run
 # Release mode (for performance testing)
 cargo build --release && ./target/release/requiem
 ```
+
+## Arch Linux Packaging (PKGBUILD)
+
+For Arch Linux users, here's a PKGBUILD template for creating a package:
+
+```bash
+# Maintainer: Your Name <you@example.com>
+pkgname=requiem
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="A lightweight, high-performance HTTP client built with Rust and iced"
+arch=('x86_64')
+url="https://github.com/yourusername/requiem"
+license=('MIT')
+depends=('gcc-libs' 'fontconfig' 'adobe-source-han-sans-otf-fonts')
+makedepends=('rust' 'cargo')
+source=("$pkgname-$pkgver.tar.gz::https://github.com/yourusername/$pkgname/archive/v$pkgver.tar.gz")
+sha256sums=('SKIP')  # Update with actual checksum
+
+build() {
+  cd "$pkgname-$pkgver"
+  cargo build --release --locked
+}
+
+check() {
+  cd "$pkgname-$pkgver"
+  cargo test --release --locked
+}
+
+package() {
+  cd "$pkgname-$pkgver"
+
+  # Install binary
+  install -Dm755 "target/release/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+  # Install license
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+
+  # Install desktop file (if available)
+  # install -Dm644 "$pkgname.desktop" "$pkgdir/usr/share/applications/$pkgname.desktop"
+
+  # Install icon (if available)
+  # install -Dm644 "assets/icon.png" "$pkgdir/usr/share/pixmaps/$pkgname.png"
+}
+```
+
+### Building the Package
+
+```bash
+# Build the package
+makepkg -si
+
+# Build without installing
+makepkg
+
+# Clean build
+makepkg -c
+
+# Update checksums
+updpkgsums
+```
+
+### Runtime Dependencies
+
+The package depends on:
+- `gcc-libs`: C runtime libraries
+- `fontconfig`: Font configuration (required by iced)
+- `adobe-source-han-sans-otf-fonts`: Chinese font support (see Font Configuration section)
+
+To check actual runtime dependencies after building:
+
+```bash
+ldd target/release/requiem
+```
