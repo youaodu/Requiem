@@ -72,5 +72,14 @@
   "save_directory": "保存目录",
   "browse": "浏览",
   "unnamed_request": "未命名接口",
-  "name_placeholder": "名称"
+  "name_placeholder": "名称",
+  "ai_config": "AI 配置",
+  "ai_api_url": "API 地址",
+  "ai_api_key": "API 密钥",
+  "ai_model": "模型",
+  "ai_fill_dialog_title": "AI 填充",
+  "ai_fill_hint": "粘贴任何与请求相关的内容：后端接口代码、前端请求代码、结构体定义、curl 命令等",
+  "ai_fill_input_placeholder": "在此粘贴代码或 curl 命令...",
+  "ai_fill_loading": "AI 正在处理您的请求，请稍候...",
+  "confirm": "确定"
 }

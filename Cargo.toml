@@ -32,6 +32,12 @@ dirs = "5"
 rfd = "0.15"
 image = "0.25"
 
+# AI Integration (Agent Client Protocol)
+agent-client-protocol = "0.4"
+futures = "0.3"
+async-trait = "0.1"
+tokio-util = { version = "0.7", features = ["compat"] }
+
 [profile.release]
 opt-level = 3
 lto = true

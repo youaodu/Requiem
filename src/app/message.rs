@@ -103,4 +103,17 @@ pub enum Message {
     CloseSettingsDialog,
     SaveDirectoryChanged(String),
     BrowseSaveDirectory,
+
+    // AI configuration
+    AiEngineChanged(crate::models::AiEngine),
+    AiApiUrlChanged(String),
+    AiApiKeyChanged(String),
+    AiModelChanged(String),
+
+    // AI Fill dialog
+    ShowAiFillDialog,
+    CloseAiFillDialog,
+    AiFillInputAction(text_editor::Action),
+    ConfirmAiFill,
+    AiFillCompleted(Result<String, String>), // AI response completed (Ok(generated_url) or Err(error))
 }

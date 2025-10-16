@@ -1,3 +1,4 @@
+mod ai_config;
 mod body;
 mod collection;
 mod environment;
@@ -8,6 +9,7 @@ mod request_tab;
 mod response;
 mod response_tab;
 
+pub use ai_config::{AiConfig, AiEngine};
 pub use body::{BodyFormat, BodyType};
 pub use collection::{Collection, CollectionItem, Folder};
 pub use environment::{Environment, EnvironmentOption};

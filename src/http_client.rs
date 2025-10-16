@@ -1,6 +1,7 @@
 use crate::models::{BodyType, HttpMethod, KeyValue, Request, Response};
 use anyhow::Result;
 use reqwest::Client;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::Instant;
 
@@ -100,4 +101,111 @@ pub async fn execute_request(request: &Request) -> Result<Response> {
         body,
         elapsed.as_millis(),
     ))
+}
+
+/// OpenAI API request structures
+#[derive(Debug, Serialize)]
+struct OpenAIMessage {
+    role: String,
+    content: String,
+}
+
+#[derive(Debug, Serialize)]
+struct OpenAIRequest {
+    model: String,
+    messages: Vec<OpenAIMessage>,
+}
+
+/// OpenAI API response structures
+#[derive(Debug, Deserialize)]
+struct OpenAIResponse {
+    choices: Vec<OpenAIChoice>,
+}
+
+#[derive(Debug, Deserialize)]
+struct OpenAIChoice {
+    message: OpenAIMessageResponse,
+}
+
+#[derive(Debug, Deserialize)]
+struct OpenAIMessageResponse {
+    content: String,
+}
+
+/// Call OpenAI API to generate URL
+pub async fn call_openai_api(
+    api_url: &str,
+    api_key: &str,
+    model: &str,
+    user_prompt: &str,
+) -> Result<String> {
+    let client = Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
+
+    // Construct full API endpoint
+    let endpoint = format!("{}/chat/completions", api_url.trim_end_matches('/'));
+
+    // Build request body with system message
+    let system_message = OpenAIMessage {
+        role: "system".to_string(),
+        content: "You are an API request generator assistant. Your task is to generate complete HTTP API request configurations based on user descriptions. \
+                  \n\nRules:\n\
+                  - Return ONLY a valid JSON object, no explanations or additional text\n\
+                  - The JSON must contain these fields: method, url, headers, params, body\n\
+                  - Use common API conventions (RESTful style)\n\
+                  - Headers and params should be arrays of {\"key\": \"...\", \"value\": \"...\"} objects\n\
+                  - Body should be a JSON string (empty string if no body needed)\n\
+                  \n\nJSON Format:\n\
+                  {\n\
+                    \"method\": \"GET|POST|PUT|PATCH|DELETE\",\n\
+                    \"url\": \"https://api.example.com/path\",\n\
+                    \"headers\": [{\"key\": \"Content-Type\", \"value\": \"application/json\"}],\n\
+                    \"params\": [{\"key\": \"page\", \"value\": \"1\"}],\n\
+                    \"body\": \"{\\\"name\\\": \\\"value\\\"}\"\n\
+                  }\n\
+                  \n\nExample:\n\
+                  User: \"Get user profile by ID 123\"\n\
+                  You: {\"method\":\"GET\",\"url\":\"https://api.example.com/v1/users/123\",\"headers\":[],\"params\":[],\"body\":\"\"}\n\
+                  \n\nUser: \"Create a new user with name John and email john@example.com\"\n\
+                  You: {\"method\":\"POST\",\"url\":\"https://api.example.com/v1/users\",\"headers\":[{\"key\":\"Content-Type\",\"value\":\"application/json\"}],\"params\":[],\"body\":\"{\\\"name\\\":\\\"John\\\",\\\"email\\\":\\\"john@example.com\\\"}\"}".to_string(),
+    };
+
+    let user_message = OpenAIMessage {
+        role: "user".to_string(),
+        content: user_prompt.to_string(),
+    };
+
+    let request_body = OpenAIRequest {
+        model: model.to_string(),
+        messages: vec![system_message, user_message],
+    };
+
+    // Send request
+    let response = client
+        .post(&endpoint)
+        .header("Content-Type", "application/json")
+        .header("Authorization", format!("Bearer {}", api_key))
+        .json(&request_body)
+        .send()
+        .await?;
+
+    // Check status
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
+        return Err(anyhow::anyhow!("OpenAI API error {}: {}", status, error_text));
+    }
+
+    // Parse response
+    let openai_response: OpenAIResponse = response.json().await?;
+
+    // Extract generated text
+    let generated_text = openai_response
+        .choices
+        .first()
+        .map(|choice| choice.message.content.clone())
+        .ok_or_else(|| anyhow::anyhow!("No response from OpenAI"))?;
+
+    Ok(generated_text)
 }

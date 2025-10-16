@@ -114,6 +114,19 @@ impl Translations {
         map.insert("browse".to_string(), "Browse".to_string());
         map.insert("close".to_string(), "Close".to_string());
 
+        // AI Configuration
+        map.insert("ai_config".to_string(), "AI Configuration".to_string());
+        map.insert("ai_api_url".to_string(), "API URL".to_string());
+        map.insert("ai_api_key".to_string(), "API Key".to_string());
+        map.insert("ai_model".to_string(), "Model".to_string());
+
+        // AI Fill Dialog
+        map.insert("ai_fill_dialog_title".to_string(), "AI Fill".to_string());
+        map.insert("ai_fill_hint".to_string(), "Paste any request-related content: backend API code, frontend request code, struct definitions, curl commands, etc.".to_string());
+        map.insert("ai_fill_input_placeholder".to_string(), "Paste code or curl command here...".to_string());
+        map.insert("ai_fill_loading".to_string(), "AI is processing your request, please wait...".to_string());
+        map.insert("confirm".to_string(), "Confirm".to_string());
+
         map
     }
 
@@ -139,6 +152,19 @@ impl Translations {
         map.insert("save_directory".to_string(), "保存目录".to_string());
         map.insert("browse".to_string(), "选择".to_string());
         map.insert("close".to_string(), "关闭".to_string());
+
+        // AI Configuration
+        map.insert("ai_config".to_string(), "AI 配置".to_string());
+        map.insert("ai_api_url".to_string(), "API 地址".to_string());
+        map.insert("ai_api_key".to_string(), "API 密钥".to_string());
+        map.insert("ai_model".to_string(), "模型".to_string());
+
+        // AI Fill Dialog
+        map.insert("ai_fill_dialog_title".to_string(), "AI 填充".to_string());
+        map.insert("ai_fill_hint".to_string(), "粘贴任何与请求相关的内容：后端接口代码、前端请求代码、结构体定义、curl 命令等".to_string());
+        map.insert("ai_fill_input_placeholder".to_string(), "在此粘贴代码或 curl 命令...".to_string());
+        map.insert("ai_fill_loading".to_string(), "AI 正在处理您的请求，请稍候...".to_string());
+        map.insert("confirm".to_string(), "确定".to_string());
 
         map
     }

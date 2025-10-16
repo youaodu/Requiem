@@ -71,8 +71,10 @@ src/
 ├── main.rs              # Entry point, iced app setup
 ├── i18n.rs              # Internationalization support (English/Chinese)
 ├── http_client.rs       # HTTP request execution (reqwest wrapper)
+├── ai_client.rs         # AI integration via Agent Client Protocol (ACP)
 ├── models/              # Core data models
 │   ├── mod.rs
+│   ├── ai_config.rs     # AI engine configuration
 │   ├── body.rs          # Request body types (JSON, Form, etc.)
 │   ├── collection.rs    # Collection and folder structures
 │   ├── environment.rs   # Environment variables
@@ -98,6 +100,8 @@ src/
 │   ├── underline_input.rs   # Custom input component
 │   ├── body_highlighter.rs  # Syntax highlighting
 │   └── components/      # Reusable UI components
+│       ├── ai_engine_picker.rs   # AI engine selector
+│       ├── ai_fill_dialog.rs     # AI fill dialog
 │       ├── code_editor.rs
 │       ├── context_menu.rs
 │       ├── environment_dialog.rs
@@ -346,3 +350,109 @@ To check actual runtime dependencies after building:
 ```bash
 ldd target/release/requiem
 ```
+
+## AI Integration (Claude Code / Codex)
+
+Requiem supports AI-powered features through the Agent Client Protocol (ACP), allowing integration with Claude Code and Codex agents.
+
+### Architecture
+
+The AI integration is implemented through:
+- **`src/ai_client.rs`**: ACP client that manages AI agent processes
+- **`src/models/ai_config.rs`**: AI engine configuration (OpenAI, Claude Code, Codex)
+- **`agent-client-protocol`** crate: Rust SDK for ACP communication
+
+### Prerequisites
+
+To use Claude Code or Codex engines, you need Node.js installed:
+
+```bash
+# Check if Node.js is available
+npx --version
+
+# On Arch Linux
+sudo pacman -S nodejs npm
+
+# On Ubuntu/Debian
+sudo apt install nodejs npm
+```
+
+### How It Works
+
+1. **Agent Process**: Requiem spawns an AI agent as a subprocess using `npx`:
+   - Claude Code: `npx @zed-industries/claude-code-acp`
+   - Codex: `npx @zed-industries/codex-acp`
+
+2. **ACP Communication**: The agent communicates with Requiem via stdin/stdout using JSON-RPC
+
+3. **Client Implementation**: `RequiemAcpClient` implements the ACP `Client` trait to handle:
+   - Permission requests (auto-approved for now)
+   - File read/write operations
+   - Session notifications (progress updates)
+
+### Current Status
+
+**Implemented:**
+- ✅ ACP client infrastructure
+- ✅ Agent process management (start/stop)
+- ✅ File system access for agents
+- ✅ AI engine configuration model
+
+**TODO:**
+- ⏸ Full ACP connection setup with `ClientSideConnection`
+- ⏸ UI integration for AI features
+- ⏸ User permission dialog
+- ⏸ Streaming response display
+
+### Usage (When Complete)
+
+```rust
+use crate::ai_client::AiClient;
+use crate::models::AiEngine;
+
+// Create AI client
+let mut client = AiClient::new(AiEngine::ClaudeCode);
+
+// Start the agent
+client.start().await?;
+
+// Send a prompt
+let response = client.send_prompt("Generate a GET request for https://api.github.com/users/octocat").await?;
+
+// Stop the agent
+client.stop().await?;
+```
+
+### PKGBUILD Considerations
+
+For Arch Linux packaging with AI features:
+
+```bash
+# Add optional dependencies
+optdepends=(
+  'nodejs: Required for Claude Code and Codex AI features'
+  'npm: Required for Claude Code and Codex AI features'
+)
+```
+
+**Note:** AI features are optional. The application works without Node.js installed, but AI functionality will be disabled.
+
+### Performance Impact
+
+- **Without AI**: No impact, AI client is not initialized
+- **With AI active**:
+  - Additional ~50-100MB for Node.js runtime
+  - Agent process memory varies by engine
+  - Still within acceptable range for power users
+
+### Security Considerations
+
+Currently, the `RequiemAcpClient` implementation:
+- Auto-approves file read/write permissions (for development)
+- Allows file access to any path requested by the agent
+- Does not execute shell commands
+
+**Production TODO:**
+- Implement user permission dialogs
+- Restrict file access to project directories
+- Add audit logging for agent actions

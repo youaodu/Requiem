@@ -1,4 +1,5 @@
 use crate::i18n::Language;
+use crate::models::AiConfig;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
@@ -11,6 +12,9 @@ pub struct Config {
     pub language: Language,
     /// Directory to save collections and requests
     pub save_directory: String,
+    /// AI configuration
+    #[serde(default)]
+    pub ai_config: AiConfig,
 }
 
 impl Default for Config {
@@ -22,6 +26,7 @@ impl Default for Config {
         Self {
             language: Language::default(),
             save_directory,
+            ai_config: AiConfig::default(),
         }
     }
 }
@@ -94,6 +99,12 @@ impl Config {
     /// Update save directory and save
     pub fn set_save_directory(&mut self, directory: String) -> Result<(), Box<dyn std::error::Error>> {
         self.save_directory = directory;
+        self.save()
+    }
+
+    /// Update AI config and save
+    pub fn set_ai_config(&mut self, ai_config: AiConfig) -> Result<(), Box<dyn std::error::Error>> {
+        self.ai_config = ai_config;
         self.save()
     }
 }

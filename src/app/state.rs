@@ -1,5 +1,6 @@
+use crate::ai_client::AiClient;
 use crate::i18n::{I18n, Language, Translations};
-use crate::models::{BodyViewMode, Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
+use crate::models::{AiConfig, BodyViewMode, Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
 use crate::ui::toast::Toast;
 use crate::utils::navigation;
 use iced::widget::{text_editor, Id};
@@ -80,6 +81,11 @@ pub struct Requiem {
     pub translations: Translations, // Translation strings
     pub show_settings_dialog: bool, // Whether to show settings dialog
     pub save_directory: String, // Directory to save collections and requests
+    pub ai_config: AiConfig, // AI configuration
+    pub ai_client: Option<AiClient>, // AI client instance (None until first use)
+    pub show_ai_fill_dialog: bool, // Whether to show AI Fill dialog
+    pub ai_fill_input_content: text_editor::Content, // Input content for AI Fill dialog
+    pub ai_fill_loading: bool, // Whether AI Fill is loading
 }
 
 impl Requiem {
@@ -91,8 +97,9 @@ impl Requiem {
         let language = config.language;
         let translations = Translations::new(language);
 
-        // Use save directory from config
+        // Use save directory and AI config from config
         let save_directory = config.save_directory.clone();
+        let ai_config = config.ai_config.clone();
 
         // Try to load collections from disk
         let collections = match crate::storage::load_collections(&save_directory) {
@@ -161,6 +168,11 @@ impl Requiem {
             translations,
             show_settings_dialog: false,
             save_directory,
+            ai_config,
+            ai_client: None, // Lazy initialization
+            show_ai_fill_dialog: false,
+            ai_fill_input_content: text_editor::Content::new(),
+            ai_fill_loading: false,
         }
     }
 

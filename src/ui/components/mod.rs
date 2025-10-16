@@ -1,3 +1,5 @@
+pub mod ai_engine_picker;
+pub mod ai_fill_dialog;
 pub mod code_editor;
 pub mod context_menu;
 pub mod dialog;

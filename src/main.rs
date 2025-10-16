@@ -1,3 +1,4 @@
+mod ai_client;
 mod app;
 mod config;
 mod http_client;

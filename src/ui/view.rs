@@ -4,7 +4,7 @@ use iced::{Alignment, Element, Length};
 use crate::app::{Message, Requiem};
 use crate::i18n::I18n;
 
-use super::components::{context_menu, environment_dialog, settings_dialog};
+use super::components::{ai_fill_dialog, context_menu, environment_dialog, settings_dialog};
 use super::{request_editor, request_list, request_tabs, response_viewer, toast};
 
 pub fn view(state: &Requiem) -> Element<'_, Message> {
@@ -162,25 +162,54 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
     // Display settings dialog as a modal overlay if present
     if state.show_settings_dialog {
         // Semi-transparent backdrop
-        let backdrop = mouse_area(
-            container(text(""))
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .style(|_theme| container::Style {
-                    background: Some(iced::Background::Color(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5))),
-                    ..Default::default()
-                }),
-        )
-        .on_press(Message::CloseSettingsDialog);
+        let backdrop = container(text(""))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(|_theme| container::Style {
+                background: Some(iced::Background::Color(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5))),
+                ..Default::default()
+            });
 
         layers.push(backdrop.into());
 
         // Dialog centered on screen
-        let dialog = container(settings_dialog::view(state.language(), &state.save_directory, &state.translations))
+        let dialog = container(settings_dialog::view(
+            state.language(),
+            &state.save_directory,
+            &state.ai_config,
+            &state.translations,
+        ))
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .align_x(Alignment::Center)
+        .align_y(Alignment::Center);
+
+        layers.push(dialog.into());
+    }
+
+    // Display AI Fill dialog as a modal overlay if present
+    if state.show_ai_fill_dialog {
+        // Semi-transparent backdrop
+        let backdrop = container(text(""))
             .width(Length::Fill)
             .height(Length::Fill)
-            .align_x(Alignment::Center)
-            .align_y(Alignment::Center);
+            .style(|_theme| container::Style {
+                background: Some(iced::Background::Color(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5))),
+                ..Default::default()
+            });
+
+        layers.push(backdrop.into());
+
+        // Dialog centered on screen
+        let dialog = container(ai_fill_dialog::view(
+            &state.ai_fill_input_content,
+            &state.translations,
+            state.ai_fill_loading,
+        ))
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .align_x(Alignment::Center)
+        .align_y(Alignment::Center);
 
         layers.push(dialog.into());
     }
