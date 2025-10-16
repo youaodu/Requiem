@@ -1,8 +1,8 @@
 [package]
 name = "requiem"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
-authors = ["Your Name <you@example.com>"]
+authors = ["youao.du@gmail.com"]
 description = "A lightweight HTTP client - lighter, faster, more geek-friendly"
 license = "MIT"
 

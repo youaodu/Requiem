@@ -35,6 +35,11 @@ pub fn main() -> iced::Result {
         .resizable(true)
         .window(iced::window::Settings {
             min_size: Some(Size::new(1280.0, 800.0)),
+            platform_specific: iced::window::settings::PlatformSpecific {
+                #[cfg(target_os = "linux")]
+                application_id: String::from("com.requiem.app"),
+                ..Default::default()
+            },
             ..Default::default()
         })
         .run_with(|| (Requiem::new(), Task::none()))
