@@ -84,26 +84,50 @@ impl Requiem {
 
     /// Handle body format changes
     pub fn handle_body_format_changed(&mut self, format: models::BodyFormat) -> Task<Message> {
-        if let Some(request) = self.get_current_request_mut() {
-            let current_text = match &request.body {
-                models::BodyType::Json(s)
-                | models::BodyType::Xml(s)
-                | models::BodyType::Text(s) => s.clone(),
-                _ => String::new(),
-            };
+        // Step 1: Get request info and current text (release borrow after this block)
+        let (request_id, current_format, current_text) = {
+            if let Some(request) = self.get_current_request() {
+                let request_id = request.id;
+                let current_format = request.body.format();
+                let current_text = match &request.body {
+                    models::BodyType::Json(s)
+                    | models::BodyType::Xml(s)
+                    | models::BodyType::Text(s) => s.clone(),
+                    _ => String::new(),
+                };
+                (request_id, current_format, current_text)
+            } else {
+                return Task::none();
+            }
+        };
 
+        // Step 2: Save current text to cache if not empty
+        if !current_text.is_empty() {
+            self.body_format_cache.insert((request_id, current_format), current_text);
+        }
+
+        // Step 3: Restore cached content for the new format
+        let restored_text = self.body_format_cache
+            .get(&(request_id, format))
+            .cloned()
+            .unwrap_or_default();
+
+        // Step 4: Update request body with new format
+        if let Some(request) = self.get_current_request_mut() {
             request.body = match format {
                 models::BodyFormat::None => models::BodyType::None,
-                models::BodyFormat::Json => models::BodyType::Json(current_text.clone()),
-                models::BodyFormat::Xml => models::BodyType::Xml(current_text.clone()),
-                models::BodyFormat::Text => models::BodyType::Text(current_text.clone()),
+                models::BodyFormat::Json => models::BodyType::Json(restored_text.clone()),
+                models::BodyFormat::Xml => models::BodyType::Xml(restored_text.clone()),
+                models::BodyFormat::Text => models::BodyType::Text(restored_text.clone()),
                 models::BodyFormat::FormData => models::BodyType::FormData(vec![]),
                 models::BodyFormat::FormUrlEncoded => models::BodyType::FormUrlEncoded(vec![]),
                 models::BodyFormat::Binary => models::BodyType::Binary(vec![]),
             };
-
-            self.request_body_content = iced::widget::text_editor::Content::with_text(&current_text);
         }
+
+        // Step 5: Update text editor content
+        self.request_body_content = iced::widget::text_editor::Content::with_text(&restored_text);
+
         Task::none()
     }
 

@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use super::key_value::KeyValue;
 
 /// Body Format Type
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum BodyFormat {
     None,
     FormData,

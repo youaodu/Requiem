@@ -1,12 +1,13 @@
 use crate::ai_client::AiClient;
 use crate::i18n::{I18n, Language, Translations};
-use crate::models::{AiConfig, BodyViewMode, Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
+use crate::models::{AiConfig, BodyFormat, BodyViewMode, Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
 use crate::ui::toast::Toast;
 use crate::utils::navigation;
 use iced::widget::{text_editor, Id};
 use iced::{Element, event, keyboard, mouse, Event, Subscription};
 use crate::app::Message;
 use uuid::Uuid;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct RequestTabItem {
@@ -86,6 +87,7 @@ pub struct Requiem {
     pub show_ai_fill_dialog: bool, // Whether to show AI Fill dialog
     pub ai_fill_input_content: text_editor::Content, // Input content for AI Fill dialog
     pub ai_fill_loading: bool, // Whether AI Fill is loading
+    pub body_format_cache: HashMap<(Uuid, BodyFormat), String>, // Cache for different body formats per request
 }
 
 impl Requiem {
@@ -173,6 +175,7 @@ impl Requiem {
             show_ai_fill_dialog: false,
             ai_fill_input_content: text_editor::Content::new(),
             ai_fill_loading: false,
+            body_format_cache: HashMap::new(),
         }
     }
 

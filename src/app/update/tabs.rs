@@ -11,6 +11,20 @@ impl Requiem {
     /// Switch to a specific tab
     pub fn handle_tab_selected(&mut self, tab: models::RequestTab) -> Task<Message> {
         self.active_tab = tab;
+
+        // When switching to Body tab, sync request body to text editor content
+        if tab == models::RequestTab::Body {
+            if let Some(request) = self.get_current_request() {
+                let body_text = match &request.body {
+                    models::BodyType::Json(s)
+                    | models::BodyType::Xml(s)
+                    | models::BodyType::Text(s) => s.clone(),
+                    _ => String::new(),
+                };
+                self.request_body_content = iced::widget::text_editor::Content::with_text(&body_text);
+            }
+        }
+
         Task::none()
     }
 
