@@ -25,6 +25,12 @@ pub fn view<'a>(
 
     // let env_selector = environment_picker::view(current_env);
 
+    let ai_fill_text = translations.get("ai_fill");
+    let ai_fill_button = button(text(ai_fill_text).size(14))
+        .on_press(Message::AiFill)
+        .padding([10, 20])
+        .style(button::secondary);
+
     let send_text = translations.get("send");
     let send_button = button(text(send_text).size(14))
         .on_press(Message::SendRequest)
@@ -38,6 +44,7 @@ pub fn view<'a>(
         .push(method_selector)
         .push(url_input)
         // .push(env_selector)
+        .push(ai_fill_button)
         .push(send_button);
 
     // Tabs bar

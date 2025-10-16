@@ -95,6 +95,8 @@ impl Translations {
     fn english_strings() -> HashMap<String, String> {
         let mut map = HashMap::new();
         map.insert("send".to_string(), "Send".to_string());
+        map.insert("ai_fill".to_string(), "AI Fill".to_string());
+        map.insert("ai_fill_placeholder".to_string(), "AI Fill feature coming soon!".to_string());
         map.insert("cancel".to_string(), "Cancel".to_string());
         map.insert("save".to_string(), "Save".to_string());
         map.insert("empty_state".to_string(), "Select a request from the sidebar or create a new one".to_string());
@@ -119,6 +121,8 @@ impl Translations {
     fn chinese_strings() -> HashMap<String, String> {
         let mut map = HashMap::new();
         map.insert("send".to_string(), "发送".to_string());
+        map.insert("ai_fill".to_string(), "AI 填充".to_string());
+        map.insert("ai_fill_placeholder".to_string(), "AI 填充功能即将推出！".to_string());
         map.insert("cancel".to_string(), "取消".to_string());
         map.insert("save".to_string(), "保存".to_string());
         map.insert("empty_state".to_string(), "从侧边栏选择一个请求或创建新请求".to_string());

@@ -170,6 +170,13 @@ The app supports multiple languages (currently English and Chinese) through the 
 - UI strings accessible via `Translations::get(key)` method
 - Switch languages through Settings dialog
 
+**IMPORTANT**: When adding new UI text or modifying existing strings:
+1. Add the translation key to `src/i18n.rs` in both `english_strings()` and `chinese_strings()` functions
+2. Update both JSON translation files:
+   - `locales/en.json` (English)
+   - `locales/zh.json` (Chinese)
+3. Ensure all three locations are kept in sync to avoid missing translations
+
 ### Font Configuration
 
 The app uses Source Han Sans CN for Chinese character support, loaded from:

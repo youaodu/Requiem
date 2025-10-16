@@ -23,6 +23,18 @@ impl Requiem {
         Task::none()
     }
 
+    /// Handle AI Fill action
+    pub fn handle_ai_fill(&mut self) -> Task<Message> {
+        info!("AI Fill triggered");
+        // TODO: Implement AI filling logic
+        // This is a placeholder for AI-powered request filling
+        // You can integrate with AI services to auto-fill headers, body, etc.
+
+        use crate::ui::toast::Toast;
+        let toast = Toast::info(self.translations.get("ai_fill_placeholder"));
+        Task::done(Message::ShowToast(toast))
+    }
+
     /// Handle send request action
     pub fn handle_send_request(&mut self) -> Task<Message> {
         if let Some(request) = self.get_current_request().cloned() {

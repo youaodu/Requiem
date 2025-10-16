@@ -9,6 +9,7 @@ pub enum Message {
     MethodSelected(HttpMethod),
     UrlChanged(String),
     EnvironmentOptionSelected(EnvironmentOption),
+    AiFill,
     SendRequest,
     RequestSent(Result<Response, String>),
 

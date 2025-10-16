@@ -15,6 +15,7 @@ impl Requiem {
             // ============ Request Operations ============
             Message::MethodSelected(method) => self.handle_method_selected(method),
             Message::UrlChanged(url) => self.handle_url_changed(url),
+            Message::AiFill => self.handle_ai_fill(),
             Message::SendRequest => self.handle_send_request(),
             Message::RequestSent(result) => self.handle_request_sent(result),
             Message::BodyChanged(body) => self.handle_body_changed(body),
