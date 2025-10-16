@@ -29,6 +29,7 @@ pub fn view<'a>(
     active_body_view_mode: BodyViewMode,
     response_body_content: &'a text_editor::Content,
     loading: bool,
+    error_message: &'a Option<String>,
 ) -> Element<'a, Message> {
     if loading {
         // Show loading state
@@ -277,6 +278,42 @@ pub fn view<'a>(
         )
         .width(Length::Fill)
         .height(Length::Fill)
+        .into()
+    } else if let Some(error) = error_message {
+        // Show error message
+        container(
+            column![
+                container(
+                    text("Request Failed")
+                        .size(16)
+                        .color(Color::from_rgb(0.9, 0.0, 0.0))
+                )
+                .width(Length::Fill)
+                .center_x(Length::Fill),
+                Space::with_height(8),
+                container(
+                    text(error)
+                        .size(14)
+                        .color(Color::from_rgb(0.5, 0.5, 0.5))
+                )
+                .padding(16)
+                .width(Length::Fill)
+                .style(|_theme: &iced::Theme| container::Style {
+                    background: Some(iced::Background::Color(Color::from_rgb(0.98, 0.95, 0.95))),
+                    border: Border {
+                        width: 1.0,
+                        color: Color::from_rgb(0.9, 0.7, 0.7),
+                        radius: 4.0.into(),
+                    },
+                    ..Default::default()
+                }),
+            ]
+            .align_x(iced::Alignment::Center)
+            .padding(40)
+        )
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .center_y(Length::Fill)
         .into()
     } else {
         container(

@@ -40,6 +40,7 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
             state.active_body_view_mode,
             &state.response_body_content,
             state.loading,
+            &state.error_message,
         );
 
         // Column layout: tab bar on top, editor in middle, response at bottom

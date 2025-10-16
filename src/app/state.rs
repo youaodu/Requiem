@@ -58,6 +58,7 @@ pub struct Requiem {
     pub active_body_view_mode: BodyViewMode, // Active body view mode (Pretty, Source, Preview, Raw)
     pub raw_response_body: String, // Original raw response body before formatting
     pub loading: bool,
+    pub error_message: Option<String>, // Error message when request fails
     pub toast: Option<Toast>,
     pub context_menu: Option<ContextMenu>,
     pub renaming_item: Option<(Vec<usize>, String, String)>, // path, original name, current name being edited
@@ -138,6 +139,7 @@ impl Requiem {
             active_body_view_mode: BodyViewMode::Raw,
             raw_response_body: String::new(),
             loading: false,
+            error_message: None,
             toast: None,
             context_menu: None,
             renaming_item: None,
