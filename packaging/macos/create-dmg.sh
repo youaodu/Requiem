@@ -40,9 +40,12 @@ cp locales/*.json "dist/${APP_NAME}.app/Contents/Resources/locales/" 2>/dev/null
 cp LICENSE "dist/${APP_NAME}.app/Contents/Resources/" 2>/dev/null || true
 
 # Copy icon if it exists
-# if [ -f "assets/icon.icns" ]; then
-#     cp assets/icon.icns "dist/${APP_NAME}.app/Contents/Resources/"
-# fi
+if [ -f "assets/icon.icns" ]; then
+    cp assets/icon.icns "dist/${APP_NAME}.app/Contents/Resources/icon.icns"
+    echo "✅ Icon included in .app bundle"
+else
+    echo "⚠️  Warning: icon.icns not found. Run ./scripts/convert-icons.sh on macOS to create it."
+fi
 
 echo ".app bundle created successfully"
 

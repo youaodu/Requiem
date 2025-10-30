@@ -35,11 +35,17 @@
     <key>NSHighResolutionCapable</key>
     <true/>
 
+    <key>CFBundleIconFile</key>
+    <string>icon</string>
+
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.developer-tools</string>
 
     <key>NSHumanReadableCopyright</key>
     <string>Copyright © 2024 youao.du@gmail.com. All rights reserved.</string>
+
+    <key>LSUIElement</key>
+    <false/>
 
     <key>CFBundleDocumentTypes</key>
     <array>
