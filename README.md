@@ -1,173 +1,129 @@
 # Requiem
 
-A lightweight, high-performance HTTP client built with Rust and iced.
+A lightweight HTTP client for API testing. Uses 50-100MB RAM vs Postman's 300-500MB.
 
 [中文文档](README_CN.md)
 
 ## Features
 
-- 🚀 **High Performance**: 50-100MB memory footprint (vs Postman's 300-500MB), <1s startup time
-- 💾 **Offline-First**: All data stored locally, Git-friendly text-based storage
-- 🎨 **Native UI**: Built with iced framework for native performance
-- 🌍 **Internationalization**: Supports English and Chinese
-- 📁 **Collection Management**: Hierarchical organization with folders and drag-and-drop
-- 🔧 **Environment Variables**: Multi-environment configuration support
-- 🎯 **Syntax Highlighting**: Syntax-highlighted request and response bodies
+- **Fast**: Uses 50-100MB memory, starts in under 1 second
+- **Works offline**: All data saved locally, plain text files that work with Git
+- **Native app**: Built with Rust and iced framework
+- **Language support**: English and Chinese
+- **Organize requests**: Folders and drag-and-drop
+- **Environments**: Switch between dev, staging, prod, etc.
+- **Syntax highlighting**: Pretty colors for JSON, XML, and more
+- **AI Fill**: Paste code from your backend and let AI fill the form
 
-## Implemented Features (v0.1.0)
+## Performance
+- Linux Arch/x86_64
+![alt text](doc/image.png)
+- Macosx x86_64
+![alt text](doc/img2.jpg)
+- Macosx arch64
+**To be added**
+- Windows11 x86_64
+![alt text](doc/img3.jpg)
 
-- ✅ Request editor (method, URL, headers, query params, body)
-- ✅ Multiple body formats (JSON, Form-data, Raw text)
-- ✅ Collection/folder organization with drag-and-drop
-- ✅ Tab-based request management
-- ✅ Response viewer with syntax highlighting
-- ✅ Environment variables support
-- ✅ Authentication (Bearer, Basic, API Key)
-- ✅ Context menus for requests/folders
-- ✅ Settings dialog
-- ✅ Toast notifications
-- ✅ Keyboard shortcuts
-- ✅ Internationalization (English/Chinese)
+
+## What's Working (v0.1.0)
+
+- Request editor (GET, POST, headers, params, body)
+- JSON, form data, raw text
+- Collections with folders and drag-and-drop
+- Multiple tabs
+- Response viewer with syntax colors
+- Environment variables
+- Auth: Bearer token, Basic, API Key
+- Right-click menus
+- Settings
+- Notifications
+- Keyboard shortcuts
+- English and Chinese UI
 
 ## Requirements
 
-- Rust 2021 or higher
-- Linux/macOS/Windows
-- Chinese font support (optional, for Chinese UI)
+- Rust 2021+
+- Linux, macOS, or Windows
+- Chinese fonts (optional, only if you want Chinese UI)
 
-## Installation & Usage
+## Install
 
 ### Arch Linux
 
-**From AUR (Recommended):**
+**From AUR:**
 ```bash
-# Using yay
 yay -S requiem
-
-# Using paru
+# or
 paru -S requiem
 ```
 
-**From GitHub Release:**
+**From GitHub:**
 ```bash
-# Download pre-built package
 wget https://github.com/youaodu/Requiem/releases/latest/download/requiem-*.pkg.tar.zst
 sudo pacman -U requiem-*.pkg.tar.zst
 ```
 
-📖 [详细 Arch Linux 安装指南](.github/ARCH_LINUX.md)
+More details: [Arch Linux install guide](.github/ARCH_LINUX.md)
 
 ### Build from Source
 
 ```bash
-# Clone the repository
 git clone https://github.com/youaodu/Requiem.git
 cd Requiem
 
-# Run in development mode
+# Run it
 cargo run
 
-# Build release version
+# Or build release
 cargo build --release
-
-# Run release version
 ./target/release/requiem
 ```
 
-### Font Configuration (Optional)
+### Chinese Fonts (Optional)
 
-For full Chinese support, ensure Source Han Sans is installed:
+For Chinese UI, install Source Han Sans:
 
 **Arch Linux:**
 ```bash
 sudo pacman -S adobe-source-han-sans-otf-fonts
 ```
 
-**Other Systems:**
-Download and install Source Han Sans, or modify the font path in `src/main.rs`.
+**Other systems:**
+Download Source Han Sans or change the font in `src/main.rs`.
 
 ## Development
 
-### Basic Commands
-
 ```bash
-# Run in development mode
+# Run it
 cargo run
 
-# Enable debug logging
+# With debug logs
 RUST_LOG=debug cargo run
 
-# Code check
+# Check code
 cargo check
 
-# Format code
+# Format
 cargo fmt
 
-# Lint with clippy
+# Lint
 cargo clippy
 
-# Run tests
+# Test
 cargo test
 ```
 
-### Debugging Tools
 
-```bash
-# Standard debug mode
-./debug.sh run
+## Performance Goals
 
-# Full trace mode
-./debug.sh trace
-
-# Memory profiling
-./debug.sh mem
-
-# CPU profiling
-./debug.sh perf
-```
-
-## Project Structure
-
-```
-src/
-├── main.rs              # Entry point
-├── i18n.rs              # Internationalization
-├── http_client.rs       # HTTP request execution
-├── models/              # Core data models
-├── app/                 # Application layer
-│   ├── state.rs         # Application state
-│   ├── message.rs       # Message enum
-│   └── update.rs        # State updates
-├── ui/                  # User interface
-│   ├── view.rs          # Main view
-│   ├── request_editor.rs    # Request editor
-│   ├── request_list.rs      # Collection sidebar
-│   ├── response_viewer.rs   # Response viewer
-│   └── components/      # UI components
-└── utils/               # Utility functions
-```
-
-## Tech Stack
-
-- **Language**: Rust 2021
-- **UI Framework**: iced 0.13 (native Elm-architecture GUI)
-- **HTTP Client**: reqwest 0.12 + tokio async runtime
-- **Syntax Highlighting**: syntect 5
-
-## Performance Targets
-
-- Memory usage: <100MB (target), <200MB (max)
-- Startup time: <1s
-- Binary size: <30MB (target), <50MB (max)
+- Memory: <100MB (aim for), <200MB (max)
+- Startup: <1s
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - see LICENSE file.
 
 ## Contributing
 
-Issues and Pull Requests are welcome!
-
-## Roadmap
-
-See `idea.md` for the complete feature roadmap and architectural details.
+Found a bug? Want a feature? Open an issue or send a PR!

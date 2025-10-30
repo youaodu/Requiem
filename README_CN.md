@@ -1,16 +1,27 @@
 # Requiem
 
-一个轻量级、高性能的 HTTP 客户端，使用 Rust 和 iced 构建。
+一个超轻量，极简洁，使用极小内存的Api管理测试工具。
 
 ## 特性
 
-- 🚀 **高性能**：内存占用 50-100MB（相比 Postman 的 300-500MB），启动时间 <1 秒
-- 💾 **离线优先**：所有数据本地存储，支持 Git 版本控制
-- 🎨 **原生界面**：使用 iced 框架构建的原生 GUI
-- 🌍 **国际化**：支持中文和英文界面
-- 📁 **集合管理**：支持文件夹和请求的层级组织
-- 🔧 **环境变量**：多环境配置支持
-- 🎯 **语法高亮**：请求和响应体的语法高亮显示
+- **高性能**：内存占用 50-100MB（相比 Postman 的 300-500MB），启动时间 <1 秒
+- **离线优先**：所有数据本地存储，支持 Git 版本控制
+- **原生界面**：使用 iced 框架构建的原生 GUI
+- **国际化**：支持中文和英文界面
+- **集合管理**：支持文件夹和请求的层级组织
+- **语法高亮**：请求和响应体的语法高亮显示
+- **ai填充**: 粘贴服务端定义、js请求等直接填充到页面中
+
+## 性能
+- Linux Arch/x86_64
+![alt text](doc/image.png)
+- Macosx x86_64
+![alt text](doc/img2.jpg)
+- Macosx arch64 
+**待补充**
+- Windows11 x86_64
+![alt text](doc/img3.jpg)
+
 
 ## 功能
 
@@ -36,6 +47,10 @@
 - 中文字体支持（可选，用于中文界面）
 
 ## 安装与运行
+
+### 安装
+- Github release 页面有下载安装包
+
 
 ### 从源码构建
 
@@ -90,49 +105,6 @@ cargo clippy
 cargo test
 ```
 
-### 调试工具
-
-```bash
-# 标准调试模式
-./debug.sh run
-
-# 完整跟踪模式
-./debug.sh trace
-
-# 内存分析
-./debug.sh mem
-
-# 性能分析
-./debug.sh perf
-```
-
-## 项目结构
-
-```
-src/
-├── main.rs              # 入口点
-├── i18n.rs              # 国际化支持
-├── http_client.rs       # HTTP 请求执行
-├── models/              # 核心数据模型
-├── app/                 # 应用逻辑层
-│   ├── state.rs         # 应用状态
-│   ├── message.rs       # 消息枚举
-│   └── update.rs        # 状态更新
-├── ui/                  # 用户界面
-│   ├── view.rs          # 主视图
-│   ├── request_editor.rs    # 请求编辑器
-│   ├── request_list.rs      # 集合侧边栏
-│   ├── response_viewer.rs   # 响应查看器
-│   └── components/      # UI 组件
-└── utils/               # 工具函数
-```
-
-## 技术栈
-
-- **语言**: Rust 2021
-- **UI 框架**: iced 0.13（原生 Elm 架构 GUI）
-- **HTTP 客户端**: reqwest 0.12 + tokio 异步运行时
-- **语法高亮**: syntect 5
 
 ## 性能目标
 
@@ -146,7 +118,3 @@ src/
 ## 贡献
 
 欢迎提交 Issue 和 Pull Request！
-
-## 路线图
-
-查看 `idea.md` 了解完整的功能路线图和架构细节。
