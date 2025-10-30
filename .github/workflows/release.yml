@@ -112,7 +112,8 @@ jobs:
           $version = "${{ needs.create-release.outputs.version }}"
           $wxsContent = Get-Content requiem.wxs -Raw
           $wxsContent = $wxsContent -replace 'Version="[^"]*"', "Version=`"$version`""
-          $wxsContent | Set-Content requiem-versioned.wxs
+          # Use UTF8 encoding without BOM to prevent XML parsing errors
+          [System.IO.File]::WriteAllText("$PWD\requiem-versioned.wxs", $wxsContent, (New-Object System.Text.UTF8Encoding $false))
 
           # Build MSI
           wix build requiem-versioned.wxs -out "dist\Requiem-$version-Windows.msi"
