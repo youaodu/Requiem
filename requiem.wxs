@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*"
+           Name="Requiem"
+           Language="1033"
+           Version="0.0.1"
+           Manufacturer="youaodu"
+           UpgradeCode="A8F5E6D4-3B2C-4F1A-9E7D-8C6B5A4E3D2F">
+
+    <Package InstallerVersion="200"
+             Compressed="yes"
+             InstallScope="perUser"
+             Description="A lightweight, high-performance HTTP client" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Requiem is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <Feature Id="ProductFeature" Title="Requiem" Level="1">
+      <ComponentGroupRef Id="ProductComponents" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="ApplicationDesktopShortcut" />
+    </Feature>
+
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="LocalAppDataFolder">
+        <Directory Id="INSTALLFOLDER" Name="Requiem" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Requiem"/>
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop"/>
+    </Directory>
+
+    <!-- Start Menu shortcut -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="B9E6F7D5-4C3D-5E2B-8F9A-7D6C5B4A3E2D">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="Requiem"
+                  Description="A lightweight HTTP client"
+                  Target="[INSTALLFOLDER]requiem.exe"
+                  WorkingDirectory="INSTALLFOLDER"/>
+        <RemoveFolder Id="CleanUpShortCut" On="uninstall"/>
+        <RegistryValue Root="HKCU"
+                       Key="Software\Requiem"
+                       Name="installed"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Desktop shortcut -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="ApplicationDesktopShortcut" Guid="C8F7E6D5-5D4E-6F3C-9E8B-8D7C6B5A4F3E">
+        <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="Requiem"
+                  Description="A lightweight HTTP client"
+                  Target="[INSTALLFOLDER]requiem.exe"
+                  WorkingDirectory="INSTALLFOLDER"/>
+        <RegistryValue Root="HKCU"
+                       Key="Software\Requiem"
+                       Name="desktop"
+                       Type="integer"
+                       Value="1"
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Main application files -->
+    <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <!-- Main executable -->
+      <Component Id="MainExecutable" Guid="D9F8E7D6-6E5F-7E4D-8F9C-9E8D7C6B5A4E">
+        <File Id="RequiemExe"
+              Source="target\release\requiem.exe"
+              KeyPath="yes" />
+      </Component>
+
+      <!-- License file -->
+      <Component Id="LicenseFile" Guid="E8F9E8D7-7F6E-8F5D-9E8D-8F9E8D7C6B5A">
+        <File Id="LicenseTxt"
+              Source="LICENSE"
+              KeyPath="yes" />
+      </Component>
+
+      <!-- Locales directory -->
+      <Component Id="LocalesEnJson" Guid="F9E8D7C6-8E7D-9F6E-8F9D-9E8F7D6C5B4A">
+        <File Id="LocalesEnJson"
+              Source="locales\en.json"
+              KeyPath="yes" />
+      </Component>
+
+      <Component Id="LocalesZhJson" Guid="E8D7C6B5-9F8E-8D7C-9E8F-8D7C6B5A4F3E">
+        <File Id="LocalesZhJson"
+              Source="locales\zh.json"
+              KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <!-- UI configuration -->
+    <UI>
+      <UIRef Id="WixUI_Minimal" />
+      <Publish Dialog="ExitDialog"
+               Control="Finish"
+               Event="DoAction"
+               Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
+    </UI>
+
+    <!-- Launch application after installation (optional) -->
+    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Requiem" />
+    <Property Id="WixShellExecTarget" Value="[#RequiemExe]" />
+    <CustomAction Id="LaunchApplication"
+                  BinaryKey="WixCA"
+                  DllEntry="WixShellExec"
+                  Impersonate="yes" />
+
+  </Product>
+</Wix>

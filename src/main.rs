@@ -37,7 +37,12 @@ pub fn main() -> iced::Result {
         };
 
         let location = if let Some(location) = panic_info.location() {
-            format!("{}:{}:{}", location.file(), location.line(), location.column())
+            format!(
+                "{}:{}:{}",
+                location.file(),
+                location.line(),
+                location.column()
+            )
         } else {
             "Unknown location".to_string()
         };
@@ -49,7 +54,8 @@ pub fn main() -> iced::Result {
             let log_file = log_dir.join("panic.log");
             let _ = std::fs::write(
                 log_file,
-                format!("PANIC at {}\n{}\nat {}\n",
+                format!(
+                    "PANIC at {}\n{}\nat {}\n",
                     chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
                     msg,
                     location
@@ -131,8 +137,7 @@ fn load_icon() -> Result<window::Icon, Box<dyn std::error::Error>> {
 
 /// Get log directory path
 fn get_log_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
-    let data_dir = dirs::data_dir()
-        .ok_or("Failed to get data directory")?;
+    let data_dir = dirs::data_dir().ok_or("Failed to get data directory")?;
     let log_dir = data_dir.join("requiem").join("logs");
     std::fs::create_dir_all(&log_dir)?;
     Ok(log_dir)
@@ -175,7 +180,5 @@ fn init_logging() {
     }
 
     // Fallback to console-only logging
-    tracing_subscriber::fmt()
-        .with_env_filter(env_filter)
-        .init();
+    tracing_subscriber::fmt().with_env_filter(env_filter).init();
 }

@@ -91,13 +91,40 @@ jobs:
       - name: Build release
         run: cargo build --release
 
-      - name: Create zip
+      - name: Install WiX Toolset
+        run: dotnet tool install --global wix --version 5.0.1
+
+      - name: Add WiX to PATH
+        run: echo "$HOME\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Create MSI installer
+        run: |
+          # Update version in WXS
+          $version = "${{ needs.create-release.outputs.version }}"
+          $wxsContent = Get-Content requiem.wxs -Raw
+          $wxsContent = $wxsContent -replace 'Version="[^"]*"', "Version=`"$version`""
+          $wxsContent | Set-Content requiem-versioned.wxs
+
+          # Build MSI
+          wix build requiem-versioned.wxs -out "dist\Requiem-$version-Windows.msi"
+
+      - name: Create zip (fallback)
         run: |
           cd target/release
           Compress-Archive -Path requiem.exe -DestinationPath requiem-${{ needs.create-release.outputs.version }}-windows-x86_64.zip
           cd ../..
 
-      - name: Upload Release Asset
+      - name: Upload MSI Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./dist/Requiem-${{ needs.create-release.outputs.version }}-Windows.msi
+          asset_name: Requiem-${{ needs.create-release.outputs.version }}-Windows.msi
+          asset_content_type: application/x-msi
+
+      - name: Upload ZIP Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,32 +139,119 @@ jobs:
     name: Build and Release (macOS)
     runs-on: macos-latest
     needs: create-release
+    strategy:
+      matrix:
+        target: [x86_64-apple-darwin, aarch64-apple-darwin]
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
 
-      - name: Build release
-        run: cargo build --release
+      - name: Build release for ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Strip binary
-        run: strip target/release/requiem
+        run: strip target/${{ matrix.target }}/release/requiem
 
-      - name: Create tarball
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: requiem-${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/requiem
+
+  # 创建 macOS Universal Binary 和 DMG
+  package-macos:
+    name: Package macOS DMG
+    runs-on: macos-latest
+    needs: [create-release, build-macos]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download x86_64 binary
+        uses: actions/download-artifact@v3
+        with:
+          name: requiem-x86_64-apple-darwin
+          path: ./artifacts/x86_64
+
+      - name: Download ARM64 binary
+        uses: actions/download-artifact@v3
+        with:
+          name: requiem-aarch64-apple-darwin
+          path: ./artifacts/aarch64
+
+      - name: Create Universal Binary
+        run: |
+          mkdir -p target/release
+          lipo -create \
+            ./artifacts/x86_64/requiem \
+            ./artifacts/aarch64/requiem \
+            -output target/release/requiem
+          chmod +x target/release/requiem
+
+      - name: Create .app bundle
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          APP_NAME="Requiem"
+
+          # Create .app structure
+          mkdir -p "dist/${APP_NAME}.app/Contents/MacOS"
+          mkdir -p "dist/${APP_NAME}.app/Contents/Resources/locales"
+
+          # Copy binary
+          cp target/release/requiem "dist/${APP_NAME}.app/Contents/MacOS/requiem"
+          chmod +x "dist/${APP_NAME}.app/Contents/MacOS/requiem"
+
+          # Copy Info.plist with version
+          sed "s/0.0.1/${VERSION}/g" packaging/macos/Info.plist > "dist/${APP_NAME}.app/Contents/Info.plist"
+
+          # Copy resources
+          cp locales/*.json "dist/${APP_NAME}.app/Contents/Resources/locales/" || true
+          cp LICENSE "dist/${APP_NAME}.app/Contents/Resources/" || true
+
+      - name: Create DMG
+        run: |
+          VERSION="${{ needs.create-release.outputs.version }}"
+          APP_NAME="Requiem"
+          DMG_NAME="${APP_NAME}-${VERSION}-macOS-Universal"
+
+          # Create DMG staging
+          mkdir -p dist/dmg
+          cp -R "dist/${APP_NAME}.app" dist/dmg/
+          ln -s /Applications dist/dmg/Applications
+
+          # Create DMG
+          hdiutil create -volname "${APP_NAME}" \
+            -srcfolder dist/dmg \
+            -ov -format UDZO \
+            "dist/${DMG_NAME}.dmg"
+
+      - name: Create tarball (fallback)
         run: |
           cd target/release
-          tar czf requiem-${{ needs.create-release.outputs.version }}-macos-x86_64.tar.gz requiem
+          tar czf requiem-${{ needs.create-release.outputs.version }}-macos-universal.tar.gz requiem
           cd ../..
 
-      - name: Upload Release Asset
+      - name: Upload DMG Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/release/requiem-${{ needs.create-release.outputs.version }}-macos-x86_64.tar.gz
-          asset_name: requiem-${{ needs.create-release.outputs.version }}-macos-x86_64.tar.gz
+          asset_path: ./dist/Requiem-${{ needs.create-release.outputs.version }}-macOS-Universal.dmg
+          asset_name: Requiem-${{ needs.create-release.outputs.version }}-macOS-Universal.dmg
+          asset_content_type: application/x-apple-diskimage
+
+      - name: Upload tarball Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/release/requiem-${{ needs.create-release.outputs.version }}-macos-universal.tar.gz
+          asset_name: requiem-${{ needs.create-release.outputs.version }}-macos-universal.tar.gz
           asset_content_type: application/gzip
 
   # 发布到 crates.io (可选)
