@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
   <Product Id="*"
            Name="Requiem"
            Language="1033"
@@ -98,21 +99,7 @@
     </ComponentGroup>
 
     <!-- UI configuration -->
-    <UI>
-      <UIRef Id="WixUI_Minimal" />
-      <Publish Dialog="ExitDialog"
-               Control="Finish"
-               Event="DoAction"
-               Value="LaunchApplication">WIXUI_EXITDIALOGOPTIONALCHECKBOX = 1 and NOT Installed</Publish>
-    </UI>
-
-    <!-- Launch application after installation (optional) -->
-    <Property Id="WIXUI_EXITDIALOGOPTIONALCHECKBOXTEXT" Value="Launch Requiem" />
-    <Property Id="WixShellExecTarget" Value="[#RequiemExe]" />
-    <CustomAction Id="LaunchApplication"
-                  BinaryKey="WixCA"
-                  DllEntry="WixShellExec"
-                  Impersonate="yes" />
+    <ui:WixUI Id="WixUI_Minimal" />
 
   </Product>
 </Wix>

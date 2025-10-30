@@ -133,6 +133,9 @@ jobs:
             exit 1
           }
 
+          # Create dist directory
+          New-Item -ItemType Directory -Force -Path "dist" | Out-Null
+
           # Build MSI
           wix build requiem-versioned.wxs -out "dist\Requiem-$version-Windows.msi"
 
