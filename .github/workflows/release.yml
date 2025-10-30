@@ -110,20 +110,23 @@ jobs:
         run: |
           # Update version in WXS
           $version = "${{ needs.create-release.outputs.version }}"
-          $wxsPath = Join-Path $PWD "requiem-versioned.wxs"
 
-          # Read and update version
-          $wxsContent = Get-Content requiem.wxs -Raw -Encoding UTF8
+          # Use .NET method to read file with correct encoding
+          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+          $wxsContent = [System.IO.File]::ReadAllText("requiem.wxs", $utf8NoBom)
+
+          # Replace version
           $wxsContent = $wxsContent -replace 'Version="[^"]*"', "Version=`"$version`""
 
-          # Write with UTF8 encoding without BOM
-          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+          # Write versioned file
+          $wxsPath = "requiem-versioned.wxs"
           [System.IO.File]::WriteAllText($wxsPath, $wxsContent, $utf8NoBom)
 
           # Verify file was created correctly
           if (Test-Path $wxsPath) {
             Write-Host "✅ WXS file created successfully"
-            Get-Content $wxsPath -Head 5
+            Write-Host "First 5 lines:"
+            Get-Content $wxsPath -Head 5 -Encoding UTF8
           } else {
             Write-Error "❌ Failed to create WXS file"
             exit 1
