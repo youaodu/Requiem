@@ -42,13 +42,11 @@ pub fn view<'a>(
             .unwrap_or(false);
 
         // Tab content: name + close button
-        let tab_name = text(&tab.name)
-            .size(13)
-            .color(if is_active {
-                Color::from_rgb(0.95, 0.95, 0.95)
-            } else {
-                Color::from_rgb(0.7, 0.7, 0.7)
-            });
+        let tab_name = text(&tab.name).size(13).color(if is_active {
+            Color::from_rgb(0.95, 0.95, 0.95)
+        } else {
+            Color::from_rgb(0.7, 0.7, 0.7)
+        });
 
         let close_button = button(text("×").size(15))
             .on_press(Message::CloseTab(idx))
@@ -68,39 +66,38 @@ pub fn view<'a>(
             .spacing(2)
             .padding([4, 8]);
 
-        let tab_button = button(tab_content)
-            .style(move |_theme, status| {
-                let bg_color = if is_dragging {
-                    Color::from_rgba(0.35, 0.35, 0.38, 0.7) // Semi-transparent when dragging
-                } else if is_hover_target {
-                    Color::from_rgb(0.4, 0.6, 0.8) // Highlight drop target
-                } else if is_active {
-                    Color::from_rgb(0.35, 0.35, 0.38)
-                } else {
-                    match status {
-                        button::Status::Hovered => Color::from_rgb(0.28, 0.28, 0.30),
-                        _ => Color::from_rgb(0.22, 0.22, 0.24),
-                    }
-                };
-
-                button::Style {
-                    background: Some(iced::Background::Color(bg_color)),
-                    text_color: Color::WHITE,
-                    border: iced::Border {
-                        color: if is_hover_target {
-                            Color::from_rgb(0.5, 0.7, 0.9)
-                        } else if is_active {
-                            Color::from_rgb(0.45, 0.45, 0.48)
-                        } else {
-                            Color::from_rgb(0.30, 0.30, 0.32)
-                        },
-                        width: if is_hover_target { 2.0 } else { 1.0 },
-                        radius: iced::border::Radius::from(4.0),
-                    },
-                    shadow: iced::Shadow::default(),
-                    snap: false,
+        let tab_button = button(tab_content).style(move |_theme, status| {
+            let bg_color = if is_dragging {
+                Color::from_rgba(0.35, 0.35, 0.38, 0.7) // Semi-transparent when dragging
+            } else if is_hover_target {
+                Color::from_rgb(0.4, 0.6, 0.8) // Highlight drop target
+            } else if is_active {
+                Color::from_rgb(0.35, 0.35, 0.38)
+            } else {
+                match status {
+                    button::Status::Hovered => Color::from_rgb(0.28, 0.28, 0.30),
+                    _ => Color::from_rgb(0.22, 0.22, 0.24),
                 }
-            });
+            };
+
+            button::Style {
+                background: Some(iced::Background::Color(bg_color)),
+                text_color: Color::WHITE,
+                border: iced::Border {
+                    color: if is_hover_target {
+                        Color::from_rgb(0.5, 0.7, 0.9)
+                    } else if is_active {
+                        Color::from_rgb(0.45, 0.45, 0.48)
+                    } else {
+                        Color::from_rgb(0.30, 0.30, 0.32)
+                    },
+                    width: if is_hover_target { 2.0 } else { 1.0 },
+                    radius: iced::border::Radius::from(4.0),
+                },
+                shadow: iced::Shadow::default(),
+                snap: false,
+            }
+        });
 
         let tab_with_mouse = mouse_area(tab_button)
             .on_press(Message::TabPressStart(idx, 0.0))
@@ -112,9 +109,7 @@ pub fn view<'a>(
     // Wrap tab_row in a scrollable for horizontal scrolling
     let scrollable_tabs = scrollable(tab_row)
         .direction(scrollable::Direction::Horizontal(
-            scrollable::Scrollbar::new()
-                .width(6)
-                .scroller_width(6)
+            scrollable::Scrollbar::new().width(6).scroller_width(6),
         ))
         .width(Length::Fill)
         .style(|_theme, status| {
@@ -141,7 +136,9 @@ pub fn view<'a>(
                     },
                 },
                 horizontal_rail: scrollable::Rail {
-                    background: Some(iced::Background::Color(Color::from_rgba(0.85, 0.85, 0.85, 0.3))),
+                    background: Some(iced::Background::Color(Color::from_rgba(
+                        0.85, 0.85, 0.85, 0.3,
+                    ))),
                     border: iced::Border {
                         radius: iced::border::Radius::from(3.0),
                         ..Default::default()

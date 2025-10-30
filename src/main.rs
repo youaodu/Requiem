@@ -8,8 +8,8 @@ mod storage;
 mod ui;
 mod utils;
 
-use iced::{Size, Task, Theme};
 use iced::window;
+use iced::{Size, Task, Theme};
 use tracing::info;
 
 use app::Requiem;
@@ -31,11 +31,7 @@ pub fn main() -> iced::Result {
     // Load window icon
     let icon = load_icon();
 
-    let app = iced::application(
-        || (Requiem::new(), Task::none()),
-        update,
-        view
-    )
+    let app = iced::application(|| (Requiem::new(), Task::none()), update, view)
         .title(|_: &Requiem| String::from("Requiem - Lightweight HTTP Client"))
         .subscription(|state: &Requiem| state.subscription())
         .theme(|_: &Requiem| Theme::Light);
@@ -43,18 +39,19 @@ pub fn main() -> iced::Result {
     // Load custom font on Linux where the path exists
     #[cfg(target_os = "linux")]
     let app = app
-        .font(include_bytes!("/usr/share/fonts/adobe-source-han-sans/SourceHanSansCN-Regular.otf"))
+        .font(include_bytes!(
+            "/usr/share/fonts/adobe-source-han-sans/SourceHanSansCN-Regular.otf"
+        ))
         .default_font(iced::Font::with_name("Source Han Sans CN"));
 
     // On macOS, use system fonts that support Chinese
     #[cfg(target_os = "macos")]
-    let app = app
-        .default_font(iced::Font {
-            family: iced::font::Family::Name("PingFang SC"),
-            weight: iced::font::Weight::Normal,
-            stretch: iced::font::Stretch::Normal,
-            style: iced::font::Style::Normal,
-        });
+    let app = app.default_font(iced::Font {
+        family: iced::font::Family::Name("PingFang SC"),
+        weight: iced::font::Weight::Normal,
+        stretch: iced::font::Stretch::Normal,
+        style: iced::font::Style::Normal,
+    });
 
     app.window_size((1280.0, 800.0))
         .resizable(true)

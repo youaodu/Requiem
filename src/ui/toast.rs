@@ -77,13 +77,9 @@ impl Toast {
 }
 
 pub fn view<'a, Message: 'a>(toast: &'a Toast) -> Element<'a, Message> {
-    let icon = text(toast.toast_type.icon())
-        .size(16)
-        .color(Color::WHITE);
+    let icon = text(toast.toast_type.icon()).size(16).color(Color::WHITE);
 
-    let message_text = text(&toast.message)
-        .size(14)
-        .color(Color::WHITE);
+    let message_text = text(&toast.message).size(14).color(Color::WHITE);
 
     let content = row![icon, message_text]
         .spacing(8)

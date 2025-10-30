@@ -32,7 +32,11 @@ impl Requiem {
     /// Handle send request action
     pub fn handle_send_request(&mut self) -> Task<Message> {
         if let Some(request) = self.get_current_request().cloned() {
-            info!("Sending request: {} {}", request.method.as_str(), request.url);
+            info!(
+                "Sending request: {} {}",
+                request.method.as_str(),
+                request.url
+            );
             self.loading = true;
             Task::perform(
                 async move {
@@ -49,14 +53,21 @@ impl Requiem {
     }
 
     /// Handle request completion
-    pub fn handle_request_sent(&mut self, result: Result<models::Response, String>) -> Task<Message> {
+    pub fn handle_request_sent(
+        &mut self,
+        result: Result<models::Response, String>,
+    ) -> Task<Message> {
         self.loading = false;
         match result {
             Ok(ref response) => {
-                info!("Request completed: {} in {}ms", response.status, response.time_ms);
+                info!(
+                    "Request completed: {} in {}ms",
+                    response.status, response.time_ms
+                );
                 self.response = Some(response.clone());
                 self.raw_response_body = response.body.clone();
-                self.response_body_content = iced::widget::text_editor::Content::with_text(&response.body);
+                self.response_body_content =
+                    iced::widget::text_editor::Content::with_text(&response.body);
                 self.active_body_view_mode = crate::models::BodyViewMode::Raw;
                 self.error_message = None; // Clear any previous error
             }
@@ -103,11 +114,13 @@ impl Requiem {
 
         // Step 2: Save current text to cache if not empty
         if !current_text.is_empty() {
-            self.body_format_cache.insert((request_id, current_format), current_text);
+            self.body_format_cache
+                .insert((request_id, current_format), current_text);
         }
 
         // Step 3: Restore cached content for the new format
-        let restored_text = self.body_format_cache
+        let restored_text = self
+            .body_format_cache
             .get(&(request_id, format))
             .cloned()
             .unwrap_or_default();
@@ -190,7 +203,10 @@ impl Requiem {
     }
 
     /// Handle request body editor actions
-    pub fn handle_request_body_action(&mut self, action: iced::widget::text_editor::Action) -> Task<Message> {
+    pub fn handle_request_body_action(
+        &mut self,
+        action: iced::widget::text_editor::Action,
+    ) -> Task<Message> {
         self.request_body_content.perform(action.clone());
         let body_text = self.request_body_content.text();
 
@@ -206,7 +222,10 @@ impl Requiem {
     }
 
     /// Handle response body editor actions (read-only)
-    pub fn handle_response_body_action(&mut self, action: iced::widget::text_editor::Action) -> Task<Message> {
+    pub fn handle_response_body_action(
+        &mut self,
+        action: iced::widget::text_editor::Action,
+    ) -> Task<Message> {
         use iced::widget::text_editor::Action;
         match action {
             Action::Move(_)

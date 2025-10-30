@@ -1,8 +1,8 @@
 use agent_client_protocol::{
-    Agent, Client, ClientSideConnection, ReadTextFileRequest, ReadTextFileResponse, RequestPermissionRequest,
-    RequestPermissionResponse, RequestPermissionOutcome, SessionNotification, WriteTextFileRequest,
-    Error as AcpError, ContentBlock, InitializeRequest, NewSessionRequest, PromptRequest, V1,
-    ClientCapabilities,
+    Agent, Client, ClientCapabilities, ClientSideConnection, ContentBlock, Error as AcpError,
+    InitializeRequest, NewSessionRequest, PromptRequest, ReadTextFileRequest, ReadTextFileResponse,
+    RequestPermissionOutcome, RequestPermissionRequest, RequestPermissionResponse,
+    SessionNotification, WriteTextFileRequest, V1,
 };
 use anyhow::{anyhow, Result};
 use std::process::{Command, Stdio};
@@ -137,14 +137,10 @@ impl AiClient {
                     };
 
                     // Create ClientSideConnection
-                    let (conn, io_task) = ClientSideConnection::new(
-                        client,
-                        stdin_compat,
-                        stdout_compat,
-                        |fut| {
+                    let (conn, io_task) =
+                        ClientSideConnection::new(client, stdin_compat, stdout_compat, |fut| {
                             tokio::task::spawn_local(fut);
-                        },
-                    );
+                        });
 
                     // Spawn IO task
                     tokio::task::spawn_local(async move {
@@ -246,7 +242,10 @@ impl AiClient {
             self.start().await?;
         }
 
-        let cmd_tx = self.cmd_tx.as_ref().ok_or_else(|| anyhow!("AI agent not started"))?;
+        let cmd_tx = self
+            .cmd_tx
+            .as_ref()
+            .ok_or_else(|| anyhow!("AI agent not started"))?;
 
         info!("Sending prompt to AI agent: {} chars", prompt.len());
 
@@ -365,15 +364,17 @@ impl Client for RequiemAcpClient {
         Ok(())
     }
 
-    async fn write_text_file(&self, args: WriteTextFileRequest) -> Result<agent_client_protocol::WriteTextFileResponse, AcpError> {
-        debug!(
-            "AI agent requesting to write file: {}",
-            args.path.display()
-        );
+    async fn write_text_file(
+        &self,
+        args: WriteTextFileRequest,
+    ) -> Result<agent_client_protocol::WriteTextFileResponse, AcpError> {
+        debug!("AI agent requesting to write file: {}", args.path.display());
 
         tokio::fs::write(&args.path, &args.content)
             .await
-            .map_err(|e| AcpError::internal_error().with_data(format!("Failed to write file: {}", e)))?;
+            .map_err(|e| {
+                AcpError::internal_error().with_data(format!("Failed to write file: {}", e))
+            })?;
 
         Ok(agent_client_protocol::WriteTextFileResponse::default())
     }
@@ -384,9 +385,9 @@ impl Client for RequiemAcpClient {
     ) -> Result<ReadTextFileResponse, AcpError> {
         debug!("AI agent requesting to read file: {}", args.path.display());
 
-        let content = tokio::fs::read_to_string(&args.path)
-            .await
-            .map_err(|e| AcpError::internal_error().with_data(format!("Failed to read file: {}", e)))?;
+        let content = tokio::fs::read_to_string(&args.path).await.map_err(|e| {
+            AcpError::internal_error().with_data(format!("Failed to read file: {}", e))
+        })?;
 
         // Handle line/limit parameters if specified
         let content = if let Some(line) = args.line {

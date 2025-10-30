@@ -16,11 +16,9 @@ pub fn view<'a, Message: Clone + 'a>(
         .on_action(on_action)
         .padding(10)
         .height(Length::Fill)
-        .highlight_with::<BodyHighlighter>(settings, |highlight, _theme| {
-            highlighter::Format {
-                color: Some(*highlight),
-                font: None,
-            }
+        .highlight_with::<BodyHighlighter>(settings, |highlight, _theme| highlighter::Format {
+            color: Some(*highlight),
+            font: None,
         })
         .style(|_theme, _status| {
             use iced::widget::text_editor::Style;

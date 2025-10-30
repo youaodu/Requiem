@@ -1,5 +1,5 @@
-use iced::Task;
 use iced::widget::operation::{focus, select_all};
+use iced::Task;
 use tracing::{debug, error, info};
 use uuid::Uuid;
 
@@ -217,7 +217,10 @@ impl Requiem {
             if let Some(item) = self.get_item_by_path_mut(&path) {
                 match item {
                     CollectionItem::Request(req) => {
-                        debug!("Renaming request: {} -> {}, ID: {}", req.name, new_name, req.id);
+                        debug!(
+                            "Renaming request: {} -> {}, ID: {}",
+                            req.name, new_name, req.id
+                        );
                         req.name = new_name.clone();
                         Some(req.id)
                     }
@@ -234,7 +237,13 @@ impl Requiem {
         // Update tab names if this request is open in any tabs
         if let Some(id) = renamed_id {
             debug!("Looking for tabs with ID: {}", id);
-            debug!("Open tabs: {:?}", self.open_tabs.iter().map(|t| (t.id, &t.name)).collect::<Vec<_>>());
+            debug!(
+                "Open tabs: {:?}",
+                self.open_tabs
+                    .iter()
+                    .map(|t| (t.id, &t.name))
+                    .collect::<Vec<_>>()
+            );
 
             let mut updated = false;
             for tab in &mut self.open_tabs {
@@ -313,17 +322,15 @@ impl Requiem {
 
     /// Start renaming an item
     pub fn handle_start_rename(&mut self, path: Vec<usize>) -> Task<Message> {
-
         let name = if path.len() == 1 {
             self.collections.get(path[0]).map(|c| c.name.clone())
         } else {
-            self.get_item_by_path(&path).map(|item| {
-                match item {
-                    CollectionItem::Request(req) => req.name.clone(),
-                    CollectionItem::Folder(folder) => folder.name.clone(),
-                }
+            self.get_item_by_path(&path).map(|item| match item {
+                CollectionItem::Request(req) => req.name.clone(),
+                CollectionItem::Folder(folder) => folder.name.clone(),
             })
-        }.unwrap_or_default();
+        }
+        .unwrap_or_default();
 
         self.renaming_item = Some((path, name.clone(), name));
         self.context_menu = None;
@@ -368,8 +375,8 @@ impl Requiem {
             if let Some(tab) = self.open_tabs.get_mut(active_idx) {
                 if tab.is_new {
                     if let (Some(draft_request), Some(parent_path)) =
-                        (tab.draft_request.clone(), tab.parent_path.clone()) {
-
+                        (tab.draft_request.clone(), tab.parent_path.clone())
+                    {
                         let new_item = CollectionItem::Request(draft_request.clone());
 
                         let new_path = if parent_path.len() == 1 {
@@ -395,7 +402,9 @@ impl Requiem {
                                         Some(vec![items.len() - 1])
                                     } else {
                                         let idx = path[0];
-                                        if let Some(CollectionItem::Folder(folder)) = items.get_mut(idx) {
+                                        if let Some(CollectionItem::Folder(folder)) =
+                                            items.get_mut(idx)
+                                        {
                                             add_to_folder(&mut folder.items, &path[1..], new_item)
                                                 .map(|mut sub_path| {
                                                     let mut result = vec![idx];
@@ -461,10 +470,7 @@ impl Requiem {
         );
 
         if let Some(path) = newly_saved_path {
-            Task::batch([
-                hide_toast_task,
-                Task::done(Message::StartRename(path))
-            ])
+            Task::batch([hide_toast_task, Task::done(Message::StartRename(path))])
         } else {
             hide_toast_task
         }

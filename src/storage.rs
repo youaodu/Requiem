@@ -13,7 +13,8 @@ pub fn get_collection_path(base_dir: &str, collection_id: &uuid::Uuid) -> PathBu
 pub fn ensure_storage_dir(base_dir: &str) -> Result<(), String> {
     let path = Path::new(base_dir);
     if !path.exists() {
-        fs::create_dir_all(path).map_err(|e| format!("Failed to create storage directory: {}", e))?;
+        fs::create_dir_all(path)
+            .map_err(|e| format!("Failed to create storage directory: {}", e))?;
         info!("Created storage directory: {}", base_dir);
     }
     Ok(())
@@ -27,8 +28,7 @@ pub fn save_collection(base_dir: &str, collection: &Collection) -> Result<(), St
     let json = serde_json::to_string_pretty(collection)
         .map_err(|e| format!("Failed to serialize collection: {}", e))?;
 
-    fs::write(&path, json)
-        .map_err(|e| format!("Failed to write collection file: {}", e))?;
+    fs::write(&path, json).map_err(|e| format!("Failed to write collection file: {}", e))?;
 
     debug!("Saved collection '{}' to {:?}", collection.name, path);
     Ok(())
@@ -46,8 +46,8 @@ pub fn load_collections(base_dir: &str) -> Result<Vec<Collection>, String> {
 
     let mut collections = Vec::new();
 
-    let entries = fs::read_dir(path)
-        .map_err(|e| format!("Failed to read storage directory: {}", e))?;
+    let entries =
+        fs::read_dir(path).map_err(|e| format!("Failed to read storage directory: {}", e))?;
 
     for entry in entries {
         let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
@@ -73,8 +73,7 @@ pub fn load_collections(base_dir: &str) -> Result<Vec<Collection>, String> {
 
 /// Load a single collection from a file
 fn load_collection_from_file(path: &Path) -> Result<Collection, String> {
-    let contents = fs::read_to_string(path)
-        .map_err(|e| format!("Failed to read file: {}", e))?;
+    let contents = fs::read_to_string(path).map_err(|e| format!("Failed to read file: {}", e))?;
 
     let collection: Collection = serde_json::from_str(&contents)
         .map_err(|e| format!("Failed to deserialize collection: {}", e))?;
@@ -87,8 +86,7 @@ pub fn delete_collection(base_dir: &str, collection_id: &uuid::Uuid) -> Result<(
     let path = get_collection_path(base_dir, collection_id);
 
     if path.exists() {
-        fs::remove_file(&path)
-            .map_err(|e| format!("Failed to delete collection file: {}", e))?;
+        fs::remove_file(&path).map_err(|e| format!("Failed to delete collection file: {}", e))?;
         debug!("Deleted collection file: {:?}", path);
     }
 

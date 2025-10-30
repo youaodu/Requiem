@@ -26,9 +26,7 @@ impl Default for Request {
             name: "New Request".to_string(),
             method: HttpMethod::GET,
             url: "https://api.example.com".to_string(),
-            headers: vec![
-                KeyValue::new("Content-Type", "application/json"),
-            ],
+            headers: vec![KeyValue::new("Content-Type", "application/json")],
             query_params: vec![],
             cookies: vec![],
             auth: vec![],

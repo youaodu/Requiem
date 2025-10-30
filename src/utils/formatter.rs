@@ -1,12 +1,10 @@
 /// Format JSON string with indentation
 pub fn format_json(json_str: &str) -> Result<String, String> {
     match serde_json::from_str::<serde_json::Value>(json_str) {
-        Ok(value) => {
-            match serde_json::to_string_pretty(&value) {
-                Ok(formatted) => Ok(formatted),
-                Err(e) => Err(format!("Failed to format JSON: {}", e)),
-            }
-        }
+        Ok(value) => match serde_json::to_string_pretty(&value) {
+            Ok(formatted) => Ok(formatted),
+            Err(e) => Err(format!("Failed to format JSON: {}", e)),
+        },
         Err(e) => Err(format!("Invalid JSON: {}", e)),
     }
 }
@@ -51,7 +49,10 @@ pub fn format_xml(xml_str: &str) -> Result<String, String> {
             formatted.push(c);
 
             // Check if it's not a self-closing tag or XML declaration
-            if !current_tag.ends_with('/') && !current_tag.starts_with('?') && !current_tag.starts_with('/') {
+            if !current_tag.ends_with('/')
+                && !current_tag.starts_with('?')
+                && !current_tag.starts_with('/')
+            {
                 indent_level += 1;
             }
             current_tag.clear();

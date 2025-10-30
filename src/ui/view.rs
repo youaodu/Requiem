@@ -53,7 +53,9 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
                 .width(Length::Fill)
                 .height(1)
                 .style(|_theme: &iced::Theme| iced::widget::container::Style {
-                    background: Some(iced::Background::Color(iced::Color::from_rgb(0.8, 0.8, 0.8))),
+                    background: Some(iced::Background::Color(iced::Color::from_rgb(
+                        0.8, 0.8, 0.8
+                    ))),
                     ..Default::default()
                 }),
             container(response_panel)
@@ -65,14 +67,11 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
         // Show empty state if no request is selected
         column![
             tab_bar_row,
-            container(
-                text(state.t("empty_state"))
-                    .size(16)
-            )
-            .width(Length::Fill)
-            .height(Length::Fill)
-            .center_x(Length::Fill)
-            .center_y(Length::Fill)
+            container(text(state.t("empty_state")).size(16))
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .center_x(Length::Fill)
+                .center_y(Length::Fill)
         ]
         .spacing(0)
     };
@@ -86,7 +85,9 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
             .width(1)
             .height(Length::Fill)
             .style(|_theme: &iced::Theme| iced::widget::container::Style {
-                background: Some(iced::Background::Color(iced::Color::from_rgb(0.8, 0.8, 0.8))),
+                background: Some(iced::Background::Color(iced::Color::from_rgb(
+                    0.8, 0.8, 0.8
+                ))),
                 ..Default::default()
             }),
         main_content
@@ -129,7 +130,13 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
 
     // Display context menu as a floating overlay if present
     if let Some(ctx_menu) = &state.context_menu {
-        let menu_overlay = context_menu::view(&ctx_menu.path, ctx_menu.x, ctx_menu.y, &ctx_menu.target, &state.translations);
+        let menu_overlay = context_menu::view(
+            &ctx_menu.path,
+            ctx_menu.x,
+            ctx_menu.y,
+            &ctx_menu.target,
+            &state.translations,
+        );
         layers.push(menu_overlay);
     }
 
@@ -141,7 +148,9 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
                 .width(Length::Fill)
                 .height(Length::Fill)
                 .style(|_theme| container::Style {
-                    background: Some(iced::Background::Color(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5))),
+                    background: Some(iced::Background::Color(iced::Color::from_rgba(
+                        0.0, 0.0, 0.0, 0.5,
+                    ))),
                     ..Default::default()
                 }),
         )
@@ -166,7 +175,9 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(|_theme| container::Style {
-                background: Some(iced::Background::Color(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5))),
+                background: Some(iced::Background::Color(iced::Color::from_rgba(
+                    0.0, 0.0, 0.0, 0.5,
+                ))),
                 ..Default::default()
             });
 
@@ -194,7 +205,9 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
             .width(Length::Fill)
             .height(Length::Fill)
             .style(|_theme| container::Style {
-                background: Some(iced::Background::Color(iced::Color::from_rgba(0.0, 0.0, 0.0, 0.5))),
+                background: Some(iced::Background::Color(iced::Color::from_rgba(
+                    0.0, 0.0, 0.0, 0.5,
+                ))),
                 ..Default::default()
             });
 
@@ -217,4 +230,3 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
     // Use stack to layer all overlays
     stack(layers).into()
 }
-

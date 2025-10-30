@@ -1,8 +1,8 @@
-use iced::widget::{button, container, mouse_area, scrollable, text, text_input, Column, Row, Id};
+use iced::widget::{button, container, mouse_area, scrollable, text, text_input, Column, Id, Row};
 use iced::{Alignment, Element, Length, Padding};
 
-use crate::app::Message;
 use crate::app::state::ContextMenuTarget;
+use crate::app::Message;
 use crate::i18n::Translations;
 use crate::models::{Collection, CollectionItem};
 use crate::ui::{icons, underline_input};
@@ -16,9 +16,7 @@ pub fn view<'a>(
     rename_input_id: &Id,
     translations: &'a Translations,
 ) -> Element<'a, Message> {
-    let mut sidebar = Column::new()
-        .spacing(0)
-        .width(Length::Fill);
+    let mut sidebar = Column::new().spacing(0).width(Length::Fill);
 
     // Search input with add button
     let search_input = text_input(translations.get("search_placeholder"), search_query)
@@ -29,15 +27,12 @@ pub fn view<'a>(
     let search_row = Row::new()
         .spacing(8)
         .padding(Padding::new(16.0).top(16.0).bottom(12.0))
-        .push(
-            container(search_input)
-                .width(Length::Fill)
-        )
+        .push(container(search_input).width(Length::Fill))
         .push(
             button(text("+").size(18))
                 .padding([4, 10])
                 .style(button::text)
-                .on_press(Message::AddNewCollection)
+                .on_press(Message::AddNewCollection),
         );
 
     sidebar = sidebar.push(search_row);
@@ -63,21 +58,22 @@ pub fn view<'a>(
         let expand_icon = if collection.expanded { "v" } else { ">" };
 
         let collection_content: Element<'_, Message> = if is_renaming {
-            let current_name = renaming_item.as_ref().map(|(_, _, name)| name.as_str()).unwrap_or(&collection.name);
+            let current_name = renaming_item
+                .as_ref()
+                .map(|(_, _, name)| name.as_str())
+                .unwrap_or(&collection.name);
             Row::new()
                 .spacing(8)
                 .padding([8, 8])
                 .push(text(expand_icon).size(12))
-                .push(
-                    underline_input::underline_input_sized(
-                        rename_input_id.clone(),
-                        translations.get("name_placeholder"),
-                        current_name,
-                        13,
-                        |new_text| Message::UpdateRenamingText(new_text),
-                        Some(Message::ConfirmRename),
-                    )
-                )
+                .push(underline_input::underline_input_sized(
+                    rename_input_id.clone(),
+                    translations.get("name_placeholder"),
+                    current_name,
+                    13,
+                    |new_text| Message::UpdateRenamingText(new_text),
+                    Some(Message::ConfirmRename),
+                ))
                 .push(text(format!("({})", collection.items.len())).size(11))
                 .into()
         } else {
@@ -91,21 +87,26 @@ pub fn view<'a>(
                             .padding([8, 8])
                             .push(text(expand_icon).size(12))
                             .push(text(&collection.name).size(13))
-                            .push(text(format!("({})", collection.items.len())).size(11))
+                            .push(text(format!("({})", collection.items.len())).size(11)),
                     )
                     .on_press(Message::ToggleExpanded(coll_path.clone()))
                     .width(Length::Fill)
-                    .style(button::text)
+                    .style(button::text),
                 )
                 .push(
                     button(text("+").size(16))
                         .padding([4, 8])
                         .style(button::text)
-                        .on_press(Message::AddNewRequest(coll_path.clone()))
+                        .on_press(Message::AddNewRequest(coll_path.clone())),
                 );
 
             mouse_area(collection_row)
-                .on_right_press(Message::ShowContextMenu(coll_path.clone(), 0.0, 0.0, ContextMenuTarget::Collection))
+                .on_right_press(Message::ShowContextMenu(
+                    coll_path.clone(),
+                    0.0,
+                    0.0,
+                    ContextMenuTarget::Collection,
+                ))
                 .into()
         };
 
@@ -127,12 +128,12 @@ pub fn view<'a>(
     }
 
     // Wrap collections in scrollable
-    let scrollable_content = scrollable(collections_column)
-        .height(Length::Fill);
+    let scrollable_content = scrollable(collections_column).height(Length::Fill);
 
     // Wrap scrollable in mouse_area to detect right-click on empty area
-    let scrollable_with_context = mouse_area(scrollable_content)
-        .on_right_press(Message::ShowContextMenu(vec![], 0.0, 0.0, ContextMenuTarget::EmptyArea));
+    let scrollable_with_context = mouse_area(scrollable_content).on_right_press(
+        Message::ShowContextMenu(vec![], 0.0, 0.0, ContextMenuTarget::EmptyArea),
+    );
 
     // Settings button at the bottom
     let settings_button = button(
@@ -141,7 +142,7 @@ pub fn view<'a>(
             .padding([8, 16])
             .align_y(Alignment::Center)
             .push(icons::settings_icon(16))
-            .push(text(translations.get("settings")).size(13))
+            .push(text(translations.get("settings")).size(13)),
     )
     .on_press(Message::ShowSettingsDialog)
     .width(Length::Fill)
@@ -198,24 +199,26 @@ fn render_items<'a>(
                     req.name.clone()
                 };
 
-                let is_renaming = renaming_item.as_ref().map(|(path, _, _)| path) == Some(&item_path);
+                let is_renaming =
+                    renaming_item.as_ref().map(|(path, _, _)| path) == Some(&item_path);
 
                 let request_content: Element<'a, Message> = if is_renaming {
-                    let current_name = renaming_item.as_ref().map(|(_, _, name)| name.as_str()).unwrap_or(&req_name);
+                    let current_name = renaming_item
+                        .as_ref()
+                        .map(|(_, _, name)| name.as_str())
+                        .unwrap_or(&req_name);
                     Row::new()
                         .spacing(8)
                         .padding(Padding::new(8.0).top(6.0).bottom(6.0).left(indent))
                         .push(text(req.method.as_str()).size(11))
-                        .push(
-                            underline_input::underline_input_sized(
-                                rename_input_id.clone(),
-                                translations.get("name_placeholder"),
-                                current_name,
-                                12,
-                                |new_text| Message::UpdateRenamingText(new_text),
-                                Some(Message::ConfirmRename),
-                            )
-                        )
+                        .push(underline_input::underline_input_sized(
+                            rename_input_id.clone(),
+                            translations.get("name_placeholder"),
+                            current_name,
+                            12,
+                            |new_text| Message::UpdateRenamingText(new_text),
+                            Some(Message::ConfirmRename),
+                        ))
                         .into()
                 } else {
                     let request_button = button(
@@ -223,7 +226,7 @@ fn render_items<'a>(
                             .spacing(8)
                             .padding(Padding::new(8.0).top(6.0).bottom(6.0).left(indent))
                             .push(text(req.method.as_str()).size(11))
-                            .push(text(req_name).size(12))
+                            .push(text(req_name).size(12)),
                     )
                     .on_press(Message::SelectRequest(item_path.clone()))
                     .width(Length::Fill)
@@ -234,7 +237,12 @@ fn render_items<'a>(
                     });
 
                     mouse_area(request_button)
-                        .on_right_press(Message::ShowContextMenu(item_path.clone(), 0.0, 0.0, ContextMenuTarget::Request))
+                        .on_right_press(Message::ShowContextMenu(
+                            item_path.clone(),
+                            0.0,
+                            0.0,
+                            ContextMenuTarget::Request,
+                        ))
                         .into()
                 };
 
@@ -242,24 +250,26 @@ fn render_items<'a>(
             }
             CollectionItem::Folder(folder) => {
                 let expand_icon = if folder.expanded { "v" } else { ">" };
-                let is_renaming = renaming_item.as_ref().map(|(path, _, _)| path) == Some(&item_path);
+                let is_renaming =
+                    renaming_item.as_ref().map(|(path, _, _)| path) == Some(&item_path);
 
                 let folder_content: Element<'a, Message> = if is_renaming {
-                    let current_name = renaming_item.as_ref().map(|(_, _, name)| name.as_str()).unwrap_or(&folder.name);
+                    let current_name = renaming_item
+                        .as_ref()
+                        .map(|(_, _, name)| name.as_str())
+                        .unwrap_or(&folder.name);
                     Row::new()
                         .spacing(8)
                         .padding(Padding::new(8.0).top(6.0).bottom(6.0).left(indent))
                         .push(text(expand_icon).size(12))
-                        .push(
-                            underline_input::underline_input_sized(
-                                rename_input_id.clone(),
-                                translations.get("name_placeholder"),
-                                current_name,
-                                12,
-                                |new_text| Message::UpdateRenamingText(new_text),
-                                Some(Message::ConfirmRename),
-                            )
-                        )
+                        .push(underline_input::underline_input_sized(
+                            rename_input_id.clone(),
+                            translations.get("name_placeholder"),
+                            current_name,
+                            12,
+                            |new_text| Message::UpdateRenamingText(new_text),
+                            Some(Message::ConfirmRename),
+                        ))
                         .push(text(format!("({})", folder.items.len())).size(10))
                         .into()
                 } else {
@@ -273,21 +283,26 @@ fn render_items<'a>(
                                     .padding(Padding::new(8.0).top(6.0).bottom(6.0).left(indent))
                                     .push(text(expand_icon).size(12))
                                     .push(text(&folder.name).size(12))
-                                    .push(text(format!("({})", folder.items.len())).size(10))
+                                    .push(text(format!("({})", folder.items.len())).size(10)),
                             )
                             .on_press(Message::ToggleExpanded(item_path.clone()))
                             .width(Length::Fill)
-                            .style(button::text)
+                            .style(button::text),
                         )
                         .push(
                             button(text("+").size(14))
                                 .padding([4, 8])
                                 .style(button::text)
-                                .on_press(Message::AddNewRequest(item_path.clone()))
+                                .on_press(Message::AddNewRequest(item_path.clone())),
                         );
 
                     mouse_area(folder_row)
-                        .on_right_press(Message::ShowContextMenu(item_path.clone(), 0.0, 0.0, ContextMenuTarget::Folder))
+                        .on_right_press(Message::ShowContextMenu(
+                            item_path.clone(),
+                            0.0,
+                            0.0,
+                            ContextMenuTarget::Folder,
+                        ))
                         .into()
                 };
 
@@ -312,4 +327,3 @@ fn render_items<'a>(
 
     column
 }
-

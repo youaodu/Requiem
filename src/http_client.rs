@@ -83,7 +83,10 @@ pub async fn execute_request(request: &Request) -> Result<Response> {
                 // Parse cookie: extract name=value part before first semicolon
                 if let Some(cookie_pair) = v.split(';').next() {
                     if let Some((name, value)) = cookie_pair.split_once('=') {
-                        cookies.push(KeyValue::new(name.trim().to_string(), value.trim().to_string()));
+                        cookies.push(KeyValue::new(
+                            name.trim().to_string(),
+                            value.trim().to_string(),
+                        ));
                     }
                 }
             }
@@ -193,8 +196,15 @@ pub async fn call_openai_api(
     // Check status
     if !response.status().is_success() {
         let status = response.status();
-        let error_text = response.text().await.unwrap_or_else(|_| "Unknown error".to_string());
-        return Err(anyhow::anyhow!("OpenAI API error {}: {}", status, error_text));
+        let error_text = response
+            .text()
+            .await
+            .unwrap_or_else(|_| "Unknown error".to_string());
+        return Err(anyhow::anyhow!(
+            "OpenAI API error {}: {}",
+            status,
+            error_text
+        ));
     }
 
     // Parse response

@@ -162,14 +162,16 @@ where
                     width: border_width,
                     radius: border_radius.into(),
                 },
-                background: background_color.or_else(|| {
-                    // Light gray background for read-only
-                    if read_only {
-                        Some(Color::from_rgb(0.95, 0.95, 0.95))
-                    } else {
-                        None
-                    }
-                }).map(|c| c.into()),
+                background: background_color
+                    .or_else(|| {
+                        // Light gray background for read-only
+                        if read_only {
+                            Some(Color::from_rgb(0.95, 0.95, 0.95))
+                        } else {
+                            None
+                        }
+                    })
+                    .map(|c| c.into()),
                 ..Default::default()
             })
             .into()

@@ -54,7 +54,11 @@ pub fn view<'a, Message: Clone + 'a>(
 pub fn view_with_buttons<'a, Message: Clone + 'a>(
     title: &'a str,
     content: Element<'a, Message>,
-    buttons: Vec<(String, Message, fn(&iced::Theme, button::Status) -> button::Style)>,
+    buttons: Vec<(
+        String,
+        Message,
+        fn(&iced::Theme, button::Status) -> button::Style,
+    )>,
     width: f32,
     height: f32,
 ) -> Element<'a, Message> {

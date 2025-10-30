@@ -45,7 +45,10 @@ impl Translations {
     /// Create translations for the given language
     pub fn new(language: Language) -> Self {
         let strings = Self::load_from_file(language).unwrap_or_else(|e| {
-            tracing::warn!("Failed to load translations from file: {}. Using fallback.", e);
+            tracing::warn!(
+                "Failed to load translations from file: {}. Using fallback.",
+                e
+            );
             Self::fallback_strings(language)
         });
         Self { strings }
@@ -57,7 +60,9 @@ impl Translations {
     }
 
     /// Load translations from JSON file
-    fn load_from_file(language: Language) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
+    fn load_from_file(
+        language: Language,
+    ) -> Result<HashMap<String, String>, Box<dyn std::error::Error>> {
         let locale_file = format!("locales/{}.json", language.code());
 
         // Try multiple paths for loading locale files
@@ -96,10 +101,16 @@ impl Translations {
         let mut map = HashMap::new();
         map.insert("send".to_string(), "Send".to_string());
         map.insert("ai_fill".to_string(), "AI Fill".to_string());
-        map.insert("ai_fill_placeholder".to_string(), "AI Fill feature coming soon!".to_string());
+        map.insert(
+            "ai_fill_placeholder".to_string(),
+            "AI Fill feature coming soon!".to_string(),
+        );
         map.insert("cancel".to_string(), "Cancel".to_string());
         map.insert("save".to_string(), "Save".to_string());
-        map.insert("empty_state".to_string(), "Select a request from the sidebar or create a new one".to_string());
+        map.insert(
+            "empty_state".to_string(),
+            "Select a request from the sidebar or create a new one".to_string(),
+        );
 
         // Context menu
         map.insert("ctx_new_request".to_string(), "New Request".to_string());
@@ -123,8 +134,14 @@ impl Translations {
         // AI Fill Dialog
         map.insert("ai_fill_dialog_title".to_string(), "AI Fill".to_string());
         map.insert("ai_fill_hint".to_string(), "Paste any request-related content: backend API code, frontend request code, struct definitions, curl commands, etc.".to_string());
-        map.insert("ai_fill_input_placeholder".to_string(), "Paste code or curl command here...".to_string());
-        map.insert("ai_fill_loading".to_string(), "AI is processing your request, please wait...".to_string());
+        map.insert(
+            "ai_fill_input_placeholder".to_string(),
+            "Paste code or curl command here...".to_string(),
+        );
+        map.insert(
+            "ai_fill_loading".to_string(),
+            "AI is processing your request, please wait...".to_string(),
+        );
         map.insert("confirm".to_string(), "Confirm".to_string());
 
         map
@@ -135,10 +152,16 @@ impl Translations {
         let mut map = HashMap::new();
         map.insert("send".to_string(), "发送".to_string());
         map.insert("ai_fill".to_string(), "AI 填充".to_string());
-        map.insert("ai_fill_placeholder".to_string(), "AI 填充功能即将推出！".to_string());
+        map.insert(
+            "ai_fill_placeholder".to_string(),
+            "AI 填充功能即将推出！".to_string(),
+        );
         map.insert("cancel".to_string(), "取消".to_string());
         map.insert("save".to_string(), "保存".to_string());
-        map.insert("empty_state".to_string(), "从侧边栏选择一个请求或创建新请求".to_string());
+        map.insert(
+            "empty_state".to_string(),
+            "从侧边栏选择一个请求或创建新请求".to_string(),
+        );
 
         // Context menu
         map.insert("ctx_new_request".to_string(), "新建请求".to_string());
@@ -161,9 +184,19 @@ impl Translations {
 
         // AI Fill Dialog
         map.insert("ai_fill_dialog_title".to_string(), "AI 填充".to_string());
-        map.insert("ai_fill_hint".to_string(), "粘贴任何与请求相关的内容：后端接口代码、前端请求代码、结构体定义、curl 命令等".to_string());
-        map.insert("ai_fill_input_placeholder".to_string(), "在此粘贴代码或 curl 命令...".to_string());
-        map.insert("ai_fill_loading".to_string(), "AI 正在处理您的请求，请稍候...".to_string());
+        map.insert(
+            "ai_fill_hint".to_string(),
+            "粘贴任何与请求相关的内容：后端接口代码、前端请求代码、结构体定义、curl 命令等"
+                .to_string(),
+        );
+        map.insert(
+            "ai_fill_input_placeholder".to_string(),
+            "在此粘贴代码或 curl 命令...".to_string(),
+        );
+        map.insert(
+            "ai_fill_loading".to_string(),
+            "AI 正在处理您的请求，请稍候...".to_string(),
+        );
         map.insert("confirm".to_string(), "确定".to_string());
 
         map

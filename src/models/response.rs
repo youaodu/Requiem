@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use super::KeyValue;
+use std::collections::HashMap;
 
 /// HTTP Response
 #[derive(Debug, Clone)]

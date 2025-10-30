@@ -1,13 +1,16 @@
 use crate::ai_client::AiClient;
+use crate::app::Message;
 use crate::i18n::{I18n, Language, Translations};
-use crate::models::{AiConfig, BodyFormat, BodyViewMode, Collection, CollectionItem, Environment, Request, RequestTab, Response, ResponseTab};
+use crate::models::{
+    AiConfig, BodyFormat, BodyViewMode, Collection, CollectionItem, Environment, Request,
+    RequestTab, Response, ResponseTab,
+};
 use crate::ui::toast::Toast;
 use crate::utils::navigation;
 use iced::widget::{text_editor, Id};
-use iced::{Element, event, keyboard, mouse, Event, Subscription};
-use crate::app::Message;
-use uuid::Uuid;
+use iced::{event, keyboard, mouse, Element, Event, Subscription};
 use std::collections::HashMap;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub struct RequestTabItem {
@@ -15,8 +18,8 @@ pub struct RequestTabItem {
     pub name: String,
     pub request_path: Option<Vec<usize>>, // None for unsaved tabs
     pub is_modified: bool,
-    pub is_new: bool, // true for unsaved new requests
-    pub draft_request: Option<Request>, // Draft request data for unsaved tabs
+    pub is_new: bool,                    // true for unsaved new requests
+    pub draft_request: Option<Request>,  // Draft request data for unsaved tabs
     pub parent_path: Option<Vec<usize>>, // Parent path for saving new requests
 }
 
@@ -32,9 +35,9 @@ pub struct DragState {
 pub struct TabPressState {
     pub tab_index: usize,
     pub press_time: std::time::Instant,
-    pub initial_x: f32,      // 鼠标按下时的初始 x 位置
-    pub last_x: f32,         // 上一次鼠标的 x 位置
-    pub delta_x: f32,        // 本次移动的 x 轴差值 (当前x - 上一次x)
+    pub initial_x: f32, // 鼠标按下时的初始 x 位置
+    pub last_x: f32,    // 上一次鼠标的 x 位置
+    pub delta_x: f32,   // 本次移动的 x 轴差值 (当前x - 上一次x)
 }
 
 #[derive(Debug, Clone)]
@@ -61,32 +64,32 @@ pub struct Requiem {
     pub response: Option<Response>,
     pub active_response_tab: ResponseTab, // Active response tab
     pub active_body_view_mode: BodyViewMode, // Active body view mode (Pretty, Source, Preview, Raw)
-    pub raw_response_body: String, // Original raw response body before formatting
+    pub raw_response_body: String,        // Original raw response body before formatting
     pub loading: bool,
     pub error_message: Option<String>, // Error message when request fails
     pub toast: Option<Toast>,
     pub context_menu: Option<ContextMenu>,
     pub renaming_item: Option<(Vec<usize>, String, String)>, // path, original name, current name being edited
-    pub mouse_position: (f32, f32), // Track current mouse position
-    pub search_query: String, // search query for filtering requests
-    pub open_tabs: Vec<RequestTabItem>, // Open request tabs
-    pub active_tab_index: Option<usize>, // Currently active tab index
-    pub drag_state: Option<DragState>, // Tab drag state
-    pub rename_input_id: Id, // ID for the rename text input
-    pub tab_press_state: Option<TabPressState>, // Track tab press for timing
-    pub current_environment: Environment, // Current selected environment
+    pub mouse_position: (f32, f32),                          // Track current mouse position
+    pub search_query: String,                                // search query for filtering requests
+    pub open_tabs: Vec<RequestTabItem>,                      // Open request tabs
+    pub active_tab_index: Option<usize>,                     // Currently active tab index
+    pub drag_state: Option<DragState>,                       // Tab drag state
+    pub rename_input_id: Id,                                 // ID for the rename text input
+    pub tab_press_state: Option<TabPressState>,              // Track tab press for timing
+    pub current_environment: Environment,                    // Current selected environment
     pub show_environment_dialog: bool, // Whether to show environment management dialog
     pub response_body_content: text_editor::Content, // Text editor content for response body
     pub request_body_content: text_editor::Content, // Text editor content for request body
-    pub language: Language, // Current UI language
-    pub translations: Translations, // Translation strings
-    pub show_settings_dialog: bool, // Whether to show settings dialog
-    pub save_directory: String, // Directory to save collections and requests
-    pub ai_config: AiConfig, // AI configuration
-    pub ai_client: Option<AiClient>, // AI client instance (None until first use)
-    pub show_ai_fill_dialog: bool, // Whether to show AI Fill dialog
+    pub language: Language,            // Current UI language
+    pub translations: Translations,    // Translation strings
+    pub show_settings_dialog: bool,    // Whether to show settings dialog
+    pub save_directory: String,        // Directory to save collections and requests
+    pub ai_config: AiConfig,           // AI configuration
+    pub ai_client: Option<AiClient>,   // AI client instance (None until first use)
+    pub show_ai_fill_dialog: bool,     // Whether to show AI Fill dialog
     pub ai_fill_input_content: text_editor::Content, // Input content for AI Fill dialog
-    pub ai_fill_loading: bool, // Whether AI Fill is loading
+    pub ai_fill_loading: bool,         // Whether AI Fill is loading
     pub body_format_cache: HashMap<(Uuid, BodyFormat), String>, // Cache for different body formats per request
 }
 
@@ -120,24 +123,25 @@ impl Requiem {
         };
 
         // Get first request for initial tab (if available)
-        let (open_tabs, selected_request, selected_collection) = if let Some(first_coll) = collections.first() {
-            if let Some(CollectionItem::Request(first_req)) = first_coll.items.first() {
-                let first_tab = RequestTabItem {
-                    id: first_req.id,
-                    name: first_req.name.clone(),
-                    request_path: Some(vec![0, 0]),
-                    is_modified: false,
-                    is_new: false,
-                    draft_request: None,
-                    parent_path: None,
-                };
-                (vec![first_tab], Some(vec![0, 0]), Some(0))
+        let (open_tabs, selected_request, selected_collection) =
+            if let Some(first_coll) = collections.first() {
+                if let Some(CollectionItem::Request(first_req)) = first_coll.items.first() {
+                    let first_tab = RequestTabItem {
+                        id: first_req.id,
+                        name: first_req.name.clone(),
+                        request_path: Some(vec![0, 0]),
+                        is_modified: false,
+                        is_new: false,
+                        draft_request: None,
+                        parent_path: None,
+                    };
+                    (vec![first_tab], Some(vec![0, 0]), Some(0))
+                } else {
+                    (vec![], None, Some(0))
+                }
             } else {
-                (vec![], None, Some(0))
-            }
-        } else {
-            (vec![], None, None)
-        };
+                (vec![], None, None)
+            };
 
         let active_tab_index = if open_tabs.is_empty() { None } else { Some(0) };
 
@@ -203,9 +207,16 @@ impl Requiem {
     pub fn get_current_request_mut(&mut self) -> Option<&mut Request> {
         // Check if active tab is an unsaved new request
         if let Some(active_idx) = self.active_tab_index {
-            if self.open_tabs.get(active_idx).map(|t| t.is_new).unwrap_or(false) {
+            if self
+                .open_tabs
+                .get(active_idx)
+                .map(|t| t.is_new)
+                .unwrap_or(false)
+            {
                 // Return draft request from tab
-                return self.open_tabs.get_mut(active_idx)
+                return self
+                    .open_tabs
+                    .get_mut(active_idx)
                     .and_then(|tab| tab.draft_request.as_mut());
             }
         }
@@ -234,7 +245,10 @@ impl Requiem {
         if let Some(collection) = self.collections.get(collection_index) {
             crate::storage::save_collection(&self.save_directory, collection)
         } else {
-            Err(format!("Collection at index {} not found", collection_index))
+            Err(format!(
+                "Collection at index {} not found",
+                collection_index
+            ))
         }
     }
 
@@ -262,7 +276,11 @@ impl Requiem {
     }
 
     /// Handle events for the application
-    fn handle_event(event: Event, status: event::Status, _window: iced::window::Id) -> Option<Message> {
+    fn handle_event(
+        event: Event,
+        status: event::Status,
+        _window: iced::window::Id,
+    ) -> Option<Message> {
         // Always handle mouse events globally, even if captured
         if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
             return Some(Message::MouseMoved(position.x, position.y));
@@ -274,27 +292,23 @@ impl Requiem {
         }
 
         match event {
-            Event::Keyboard(keyboard::Event::KeyPressed {
-                key,
-                modifiers,
-                ..
-            }) => {
-                match &key {
-                    keyboard::Key::Character(c) if modifiers.contains(keyboard::Modifiers::CTRL) && c == "s" => {
-                        return Some(Message::SaveRequest);
-                    }
-                    keyboard::Key::Named(keyboard::key::Named::Escape) => {
-                        return Some(Message::CancelRename);
-                    }
-                    keyboard::Key::Named(keyboard::key::Named::ArrowLeft) => {
-                        return Some(Message::MoveActiveTabLeft);
-                    }
-                    keyboard::Key::Named(keyboard::key::Named::ArrowRight) => {
-                        return Some(Message::MoveActiveTabRight);
-                    }
-                    _ => {}
+            Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) => match &key {
+                keyboard::Key::Character(c)
+                    if modifiers.contains(keyboard::Modifiers::CTRL) && c == "s" =>
+                {
+                    return Some(Message::SaveRequest);
                 }
-            }
+                keyboard::Key::Named(keyboard::key::Named::Escape) => {
+                    return Some(Message::CancelRename);
+                }
+                keyboard::Key::Named(keyboard::key::Named::ArrowLeft) => {
+                    return Some(Message::MoveActiveTabLeft);
+                }
+                keyboard::Key::Named(keyboard::key::Named::ArrowRight) => {
+                    return Some(Message::MoveActiveTabRight);
+                }
+                _ => {}
+            },
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
                 // End drag when left mouse button is released
                 // Also trigger tab press end with current mouse position

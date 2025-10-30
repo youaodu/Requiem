@@ -28,13 +28,13 @@ pub fn view<'a>(
                     text_input("", save_directory)
                         .padding(10)
                         .size(14)
-                        .width(Length::Fill)
+                        .width(Length::Fill),
                 )
                 .push(
                     button(text(translations.get("browse")).size(14))
                         .on_press(Message::BrowseSaveDirectory)
-                        .padding([10, 15])
-                )
+                        .padding([10, 15]),
+                ),
         );
 
     let ai_section = Column::new()
@@ -54,8 +54,8 @@ pub fn view<'a>(
                             .padding(10)
                             .size(14)
                             .width(Length::Fill)
-                            .on_input(Message::AiApiUrlChanged)
-                    )
+                            .on_input(Message::AiApiUrlChanged),
+                    ),
             )
             .push(
                 Column::new()
@@ -67,8 +67,8 @@ pub fn view<'a>(
                             .size(14)
                             .width(Length::Fill)
                             .on_input(Message::AiApiKeyChanged)
-                            .secure(true)
-                    )
+                            .secure(true),
+                    ),
             )
             .push(
                 Column::new()
@@ -79,8 +79,8 @@ pub fn view<'a>(
                             .padding(10)
                             .size(14)
                             .width(Length::Fill)
-                            .on_input(Message::AiModelChanged)
-                    )
+                            .on_input(Message::AiModelChanged),
+                    ),
             )
     } else {
         ai_section
@@ -92,8 +92,7 @@ pub fn view<'a>(
         .push(save_directory_section)
         .push(ai_section);
 
-    let scrollable_content = scrollable(content)
-        .height(Length::Fill);
+    let scrollable_content = scrollable(content).height(Length::Fill);
 
     dialog::view(
         translations.get("settings"),

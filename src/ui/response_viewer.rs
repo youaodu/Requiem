@@ -10,7 +10,10 @@ use crate::ui::icons;
 
 /// Detect the language for syntax highlighting based on Content-Type header
 fn detect_language_from_headers(headers: &HashMap<String, String>) -> BodyLanguage {
-    if let Some(content_type) = headers.get("content-type").or_else(|| headers.get("Content-Type")) {
+    if let Some(content_type) = headers
+        .get("content-type")
+        .or_else(|| headers.get("Content-Type"))
+    {
         let content_type = content_type.to_lowercase();
         if content_type.contains("json") {
             return BodyLanguage::Json;
@@ -48,7 +51,7 @@ pub fn view<'a>(
                     .width(Length::Fill)
                     .center_x(Length::Fill),
             ]
-            .align_x(iced::Alignment::Center)
+            .align_x(iced::Alignment::Center),
         )
         .width(Length::Fill)
         .height(Length::Fill)
@@ -143,7 +146,9 @@ pub fn view<'a>(
                         };
 
                         let bg = match status {
-                            button::Status::Hovered if !is_active => Color::from_rgb(0.95, 0.95, 0.95),
+                            button::Status::Hovered if !is_active => {
+                                Color::from_rgb(0.95, 0.95, 0.95)
+                            }
                             _ => base_bg,
                         };
 
@@ -179,7 +184,9 @@ pub fn view<'a>(
                     .padding([4, 16])
                     .width(Length::Fill)
                     .style(|_theme: &iced::Theme| container::Style {
-                        background: Some(iced::Background::Color(Color::from_rgb(0.98, 0.98, 0.98))),
+                        background: Some(iced::Background::Color(Color::from_rgb(
+                            0.98, 0.98, 0.98,
+                        ))),
                         border: Border {
                             width: 1.0,
                             color: Color::from_rgb(0.9, 0.9, 0.9),
@@ -193,19 +200,35 @@ pub fn view<'a>(
                 let body_content: Element<'a, Message> = match active_body_view_mode {
                     BodyViewMode::Raw => {
                         // Raw view without syntax highlighting
-                        code_editor::view(response_body_content, BodyLanguage::Plain, Message::ResponseBodyAction)
+                        code_editor::view(
+                            response_body_content,
+                            BodyLanguage::Plain,
+                            Message::ResponseBodyAction,
+                        )
                     }
                     BodyViewMode::Json => {
                         // JSON syntax highlighting
-                        code_editor::view(response_body_content, BodyLanguage::Json, Message::ResponseBodyAction)
+                        code_editor::view(
+                            response_body_content,
+                            BodyLanguage::Json,
+                            Message::ResponseBodyAction,
+                        )
                     }
                     BodyViewMode::Xml => {
                         // XML syntax highlighting
-                        code_editor::view(response_body_content, BodyLanguage::Xml, Message::ResponseBodyAction)
+                        code_editor::view(
+                            response_body_content,
+                            BodyLanguage::Xml,
+                            Message::ResponseBodyAction,
+                        )
                     }
                     BodyViewMode::Html => {
                         // HTML syntax highlighting
-                        code_editor::view(response_body_content, BodyLanguage::Html, Message::ResponseBodyAction)
+                        code_editor::view(
+                            response_body_content,
+                            BodyLanguage::Html,
+                            Message::ResponseBodyAction,
+                        )
                     }
                 };
 
@@ -256,7 +279,9 @@ pub fn view<'a>(
                                     container(text(&cookie.key).size(12))
                                         .width(Length::Fixed(200.0))
                                         .padding([4, 8]),
-                                    text(&cookie.value).size(12).color(Color::from_rgb(0.4, 0.4, 0.4)),
+                                    text(&cookie.value)
+                                        .size(12)
+                                        .color(Color::from_rgb(0.4, 0.4, 0.4)),
                                 ]
                                 .spacing(8),
                             )
@@ -291,25 +316,23 @@ pub fn view<'a>(
                 .width(Length::Fill)
                 .center_x(Length::Fill),
                 Space::new().height(8),
-                container(
-                    text(error)
-                        .size(14)
-                        .color(Color::from_rgb(0.5, 0.5, 0.5))
-                )
-                .padding(16)
-                .width(Length::Fill)
-                .style(|_theme: &iced::Theme| container::Style {
-                    background: Some(iced::Background::Color(Color::from_rgb(0.98, 0.95, 0.95))),
-                    border: Border {
-                        width: 1.0,
-                        color: Color::from_rgb(0.9, 0.7, 0.7),
-                        radius: 4.0.into(),
-                    },
-                    ..Default::default()
-                }),
+                container(text(error).size(14).color(Color::from_rgb(0.5, 0.5, 0.5)))
+                    .padding(16)
+                    .width(Length::Fill)
+                    .style(|_theme: &iced::Theme| container::Style {
+                        background: Some(iced::Background::Color(Color::from_rgb(
+                            0.98, 0.95, 0.95
+                        ))),
+                        border: Border {
+                            width: 1.0,
+                            color: Color::from_rgb(0.9, 0.7, 0.7),
+                            radius: 4.0.into(),
+                        },
+                        ..Default::default()
+                    }),
             ]
             .align_x(iced::Alignment::Center)
-            .padding(40)
+            .padding(40),
         )
         .width(Length::Fill)
         .height(Length::Fill)
@@ -317,10 +340,14 @@ pub fn view<'a>(
         .into()
     } else {
         container(
-            container(text("No response yet").size(14).color(Color::from_rgb(0.5, 0.5, 0.5)))
-                .padding(40)
-                .width(Length::Fill)
-                .center_x(Length::Fill),
+            container(
+                text("No response yet")
+                    .size(14)
+                    .color(Color::from_rgb(0.5, 0.5, 0.5)),
+            )
+            .padding(40)
+            .width(Length::Fill)
+            .center_x(Length::Fill),
         )
         .width(Length::Fill)
         .height(Length::Fill)

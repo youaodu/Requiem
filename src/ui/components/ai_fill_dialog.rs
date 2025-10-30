@@ -19,9 +19,7 @@ pub fn view<'a>(
         .height(220.0)
         .build();
 
-    let mut inner_content = Column::new()
-        .spacing(12)
-        .push(hint);
+    let mut inner_content = Column::new().spacing(12).push(hint);
 
     // Show loading indicator or text area based on loading state
     if is_loading {
@@ -33,18 +31,15 @@ pub fn view<'a>(
         inner_content = inner_content.push(text_area);
     }
 
-    let content = scrollable(inner_content)
-        .height(Length::Fill);
+    let content = scrollable(inner_content).height(Length::Fill);
 
     let buttons = if is_loading {
         // Only show disabled confirm button when loading
-        vec![
-            (
-                translations.get("confirm").to_string(),
-                Message::ConfirmAiFill, // This won't be triggered as button is disabled
-                button::primary as fn(&iced::Theme, button::Status) -> button::Style,
-            ),
-        ]
+        vec![(
+            translations.get("confirm").to_string(),
+            Message::ConfirmAiFill, // This won't be triggered as button is disabled
+            button::primary as fn(&iced::Theme, button::Status) -> button::Style,
+        )]
     } else {
         vec![
             (

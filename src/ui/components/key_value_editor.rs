@@ -36,18 +36,9 @@ where
     let header_labels = Row::new()
         .spacing(16)
         .padding([8, 0])
-        .push(
-            container(text(config.key_label).size(12))
-                .width(Length::FillPortion(1))
-        )
-        .push(
-            container(text(config.value_label).size(12))
-                .width(Length::FillPortion(2))
-        )
-        .push(
-            container(text("").size(12))
-                .width(Length::Fixed(40.0))
-        );
+        .push(container(text(config.key_label).size(12)).width(Length::FillPortion(1)))
+        .push(container(text(config.value_label).size(12)).width(Length::FillPortion(2)))
+        .push(container(text("").size(12)).width(Length::Fixed(40.0)));
 
     column = column.push(header_labels);
 
@@ -86,7 +77,5 @@ where
 
     column = column.push(add_button);
 
-    container(column)
-        .padding(20)
-        .into()
+    container(column).padding(20).into()
 }

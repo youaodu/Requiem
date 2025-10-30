@@ -21,7 +21,9 @@ impl Requiem {
             Message::BodyChanged(body) => self.handle_body_changed(body),
             Message::BodyFormatChanged(format) => self.handle_body_format_changed(format),
             Message::FormDataKeyChanged(idx, key) => self.handle_form_data_key_changed(idx, key),
-            Message::FormDataValueChanged(idx, value) => self.handle_form_data_value_changed(idx, value),
+            Message::FormDataValueChanged(idx, value) => {
+                self.handle_form_data_value_changed(idx, value)
+            }
             Message::AddFormDataField => self.handle_add_form_data_field(),
             Message::RemoveFormDataField(idx) => self.handle_remove_form_data_field(idx),
             Message::RequestBodyAction(action) => self.handle_request_body_action(action),
@@ -72,15 +74,21 @@ impl Requiem {
             Message::TabDragStart(index, offset_x) => self.handle_tab_drag_start(index, offset_x),
             Message::TabDragMove(x) => self.handle_tab_drag_move(x),
             Message::TabDragEnd => self.handle_tab_drag_end(),
-            Message::ReorderTabs(from_index, to_index) => self.handle_reorder_tabs(from_index, to_index),
+            Message::ReorderTabs(from_index, to_index) => {
+                self.handle_reorder_tabs(from_index, to_index)
+            }
             Message::MoveActiveTabLeft => self.handle_move_active_tab_left(),
             Message::MoveActiveTabRight => self.handle_move_active_tab_right(),
             Message::TabPressStart(index, x) => self.handle_tab_press_start(index, x),
 
             // ============ UI State ============
-            Message::EnvironmentOptionSelected(option) => self.handle_environment_option_selected(option),
+            Message::EnvironmentOptionSelected(option) => {
+                self.handle_environment_option_selected(option)
+            }
             Message::BodyViewModeSelected(mode) => self.handle_body_view_mode_selected(mode),
-            Message::ShowContextMenu(path, x, y, target) => self.handle_show_context_menu(path, x, y, target),
+            Message::ShowContextMenu(path, x, y, target) => {
+                self.handle_show_context_menu(path, x, y, target)
+            }
             Message::HideContextMenu => self.handle_hide_context_menu(),
             Message::ShowToast(toast) => self.handle_show_toast(toast),
             Message::HideToast => self.handle_hide_toast(),

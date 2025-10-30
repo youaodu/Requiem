@@ -5,7 +5,10 @@ use crate::app::Message;
 use crate::i18n::Translations;
 use crate::models::{BodyFormat, BodyType, Environment, Request, RequestTab};
 use crate::ui::body_highlighter::BodyLanguage;
-use crate::ui::components::{code_editor, /* environment_picker, */ key_value_editor, method_picker, option_buttons, tabs_bar};
+use crate::ui::components::{
+    code_editor, /* environment_picker, */ key_value_editor, method_picker, option_buttons,
+    tabs_bar,
+};
 
 pub fn view<'a>(
     request: &'a Request,
@@ -76,7 +79,10 @@ pub fn view<'a>(
         .into()
 }
 
-fn view_params_tab<'a>(request: &'a Request, translations: &'a Translations) -> Element<'a, Message> {
+fn view_params_tab<'a>(
+    request: &'a Request,
+    translations: &'a Translations,
+) -> Element<'a, Message> {
     let config = key_value_editor::KeyValueEditorConfig {
         key_label: translations.get("param_key_label"),
         value_label: translations.get("param_value_label"),
@@ -97,7 +103,11 @@ fn view_params_tab<'a>(request: &'a Request, translations: &'a Translations) -> 
     )
 }
 
-fn view_body_tab<'a>(request: &'a Request, body_content: &'a text_editor::Content, translations: &'a Translations) -> Element<'a, Message> {
+fn view_body_tab<'a>(
+    request: &'a Request,
+    body_content: &'a text_editor::Content,
+    translations: &'a Translations,
+) -> Element<'a, Message> {
     // Body type selector using option_buttons component
     let body_formats = BodyFormat::all();
     let current_format = request.body.format();
@@ -169,7 +179,10 @@ fn view_body_tab<'a>(request: &'a Request, body_content: &'a text_editor::Conten
         .into()
 }
 
-fn view_headers_tab<'a>(request: &'a Request, translations: &'a Translations) -> Element<'a, Message> {
+fn view_headers_tab<'a>(
+    request: &'a Request,
+    translations: &'a Translations,
+) -> Element<'a, Message> {
     let config = key_value_editor::KeyValueEditorConfig {
         key_label: translations.get("header_key_label"),
         value_label: translations.get("header_value_label"),
@@ -190,7 +203,10 @@ fn view_headers_tab<'a>(request: &'a Request, translations: &'a Translations) ->
     )
 }
 
-fn view_cookies_tab<'a>(request: &'a Request, translations: &'a Translations) -> Element<'a, Message> {
+fn view_cookies_tab<'a>(
+    request: &'a Request,
+    translations: &'a Translations,
+) -> Element<'a, Message> {
     let config = key_value_editor::KeyValueEditorConfig {
         key_label: translations.get("cookie_key_label"),
         value_label: translations.get("cookie_value_label"),

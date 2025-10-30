@@ -42,15 +42,13 @@ where
     let underline = container("")
         .width(Length::Fill)
         .height(1)
-        .style(|_theme: &Theme| {
-            container::Style {
-                border: Border {
-                    color: iced::Color::from_rgb(0.6, 0.6, 0.6),
-                    width: 1.0,
-                    radius: 0.0.into(),
-                },
-                ..Default::default()
-            }
+        .style(|_theme: &Theme| container::Style {
+            border: Border {
+                color: iced::Color::from_rgb(0.6, 0.6, 0.6),
+                width: 1.0,
+                radius: 0.0.into(),
+            },
+            ..Default::default()
         });
 
     Column::new()
@@ -101,15 +99,13 @@ where
     let underline = container("")
         .width(Length::Fill)
         .height(1)
-        .style(|_theme: &Theme| {
-            container::Style {
-                border: Border {
-                    color: iced::Color::from_rgb(0.6, 0.6, 0.6),
-                    width: 1.0,
-                    radius: 0.0.into(),
-                },
-                ..Default::default()
-            }
+        .style(|_theme: &Theme| container::Style {
+            border: Border {
+                color: iced::Color::from_rgb(0.6, 0.6, 0.6),
+                width: 1.0,
+                radius: 0.0.into(),
+            },
+            ..Default::default()
         });
 
     Column::new()

@@ -52,7 +52,10 @@ impl Config {
                 }
             }
         } else {
-            debug!("Config file not found, creating default at: {:?}", config_path);
+            debug!(
+                "Config file not found, creating default at: {:?}",
+                config_path
+            );
         }
 
         let config = Self::default();
@@ -97,7 +100,10 @@ impl Config {
     }
 
     /// Update save directory and save
-    pub fn set_save_directory(&mut self, directory: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn set_save_directory(
+        &mut self,
+        directory: String,
+    ) -> Result<(), Box<dyn std::error::Error>> {
         self.save_directory = directory;
         self.save()
     }

@@ -21,7 +21,8 @@ impl Requiem {
                     | models::BodyType::Text(s) => s.clone(),
                     _ => String::new(),
                 };
-                self.request_body_content = iced::widget::text_editor::Content::with_text(&body_text);
+                self.request_body_content =
+                    iced::widget::text_editor::Content::with_text(&body_text);
             }
         }
 
@@ -36,14 +37,22 @@ impl Requiem {
 
     /// Open a request in a new or existing tab
     pub fn handle_open_tab(&mut self, path: Vec<usize>) -> Task<Message> {
-        if let Some(existing_idx) = self.open_tabs.iter().position(|tab| tab.request_path.as_ref() == Some(&path)) {
+        if let Some(existing_idx) = self
+            .open_tabs
+            .iter()
+            .position(|tab| tab.request_path.as_ref() == Some(&path))
+        {
             self.active_tab_index = Some(existing_idx);
             self.selected_request = Some(path);
         } else {
             let (name, id) = if let Some(item) = self.get_item_by_path(&path) {
                 match item {
                     CollectionItem::Request(req) => {
-                        tracing::debug!("Opening tab for request: name={}, id={}", req.name, req.id);
+                        tracing::debug!(
+                            "Opening tab for request: name={}, id={}",
+                            req.name,
+                            req.id
+                        );
                         (req.name.clone(), req.id)
                     }
                     _ => ("Unknown".to_string(), Uuid::new_v4()),
@@ -89,7 +98,8 @@ impl Requiem {
                 self.response = None;
             } else if let Some(active_idx) = self.active_tab_index {
                 if active_idx >= index {
-                    self.active_tab_index = Some(active_idx.saturating_sub(1).min(self.open_tabs.len() - 1));
+                    self.active_tab_index =
+                        Some(active_idx.saturating_sub(1).min(self.open_tabs.len() - 1));
                 }
                 if let Some(new_active_idx) = self.active_tab_index {
                     if let Some(tab) = self.open_tabs.get(new_active_idx) {
@@ -122,7 +132,8 @@ impl Requiem {
                         | models::BodyType::Text(s) => s.clone(),
                         _ => String::new(),
                     };
-                    self.request_body_content = iced::widget::text_editor::Content::with_text(&body_text);
+                    self.request_body_content =
+                        iced::widget::text_editor::Content::with_text(&body_text);
                 }
             }
         }
@@ -161,7 +172,10 @@ impl Requiem {
 
     /// End tab drag operation
     pub fn handle_tab_drag_end(&mut self) -> Task<Message> {
-        info!("=== TAB DRAG END CALLED (mouse_pos={}, {}) ===", self.mouse_position.0, self.mouse_position.1);
+        info!(
+            "=== TAB DRAG END CALLED (mouse_pos={}, {}) ===",
+            self.mouse_position.0, self.mouse_position.1
+        );
 
         // Handle tab press state (click without drag)
         if let Some(press_state) = self.tab_press_state.take() {
@@ -191,7 +205,10 @@ impl Requiem {
             if let Some(target_idx) = drag_state.hover_index {
                 let from_idx = drag_state.dragging_tab_index;
                 if from_idx != target_idx {
-                    info!("Drag ended: reordering tab from {} to {}", from_idx, target_idx);
+                    info!(
+                        "Drag ended: reordering tab from {} to {}",
+                        from_idx, target_idx
+                    );
                     return self.update(Message::ReorderTabs(from_idx, target_idx));
                 }
             }
@@ -251,7 +268,10 @@ impl Requiem {
             last_x: initial_x,
             delta_x: 0.0,
         });
-        info!("=== TAB PRESS START: index={}, initial_x={}, time={:?} ===", index, initial_x, press_time);
+        info!(
+            "=== TAB PRESS START: index={}, initial_x={}, time={:?} ===",
+            index, initial_x, press_time
+        );
         Task::none()
     }
 }
