@@ -1,14 +1,3 @@
-fn main() {
-    // Only embed icon resource on Windows
-    #[cfg(target_os = "windows")]
-    {
-        // Check if winres is available (it's a build dependency)
-        if let Err(e) = embed_windows_icon() {
-            println!("cargo:warning=Failed to embed Windows icon: {}", e);
-        }
-    }
-}
-
 #[cfg(target_os = "windows")]
 fn embed_windows_icon() -> Result<(), Box<dyn std::error::Error>> {
     // Try to use winres if available
@@ -37,7 +26,13 @@ fn embed_windows_icon() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(not(target_os = "windows"))]
-fn embed_windows_icon() -> Result<(), Box<dyn std::error::Error>> {
-    Ok(())
+fn main() {
+    // Only embed icon resource on Windows
+    #[cfg(target_os = "windows")]
+    {
+        // Check if winres is available (it's a build dependency)
+        if let Err(e) = embed_windows_icon() {
+            println!("cargo:warning=Failed to embed Windows icon: {}", e);
+        }
+    }
 }
