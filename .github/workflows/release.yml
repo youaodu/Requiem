@@ -115,8 +115,9 @@ jobs:
           $utf8NoBom = New-Object System.Text.UTF8Encoding $false
           $wxsContent = [System.IO.File]::ReadAllText("requiem.wxs", $utf8NoBom)
 
-          # Replace version
-          $wxsContent = $wxsContent -replace 'Version="[^"]*"', "Version=`"$version`""
+          # Replace version in Product element only (case-sensitive, with context)
+          # This regex matches: Language="1033"\n           Version="0.0.1"
+          $wxsContent = $wxsContent -replace '(Language="1033"[\s\r\n]+Version=")[^"]*"', "`${1}$version`""
 
           # Write versioned file
           $wxsPath = "requiem-versioned.wxs"
