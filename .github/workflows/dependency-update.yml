@@ -1,0 +1,48 @@
+name: Dependency Update
+
+on:
+  schedule:
+    # 每周一早上运行
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libssl-dev
+
+      - name: Update dependencies
+        run: cargo update
+
+      - name: Run tests
+        run: cargo test --all-features --workspace
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: Update dependencies'
+          title: 'chore: Update dependencies'
+          body: |
+            Automated dependency update.
+
+            Please review the changes and ensure all tests pass.
+          branch: chore/update-dependencies
+          delete-branch: true

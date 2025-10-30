@@ -37,6 +37,26 @@ A lightweight, high-performance HTTP client built with Rust and iced.
 
 ## Installation & Usage
 
+### Arch Linux
+
+**From AUR (Recommended):**
+```bash
+# Using yay
+yay -S requiem
+
+# Using paru
+paru -S requiem
+```
+
+**From GitHub Release:**
+```bash
+# Download pre-built package
+wget https://github.com/youaodu/Requiem/releases/latest/download/requiem-*.pkg.tar.zst
+sudo pacman -U requiem-*.pkg.tar.zst
+```
+
+📖 [详细 Arch Linux 安装指南](.github/ARCH_LINUX.md)
+
 ### Build from Source
 
 ```bash

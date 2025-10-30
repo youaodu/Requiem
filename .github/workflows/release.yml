@@ -1,0 +1,273 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # 创建 GitHub Release
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Get version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Requiem ${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
+
+  # Linux 构建和发布
+  build-linux:
+    name: Build and Release (Linux)
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libssl-dev
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Strip binary
+        run: strip target/release/requiem
+
+      - name: Create tarball
+        run: |
+          cd target/release
+          tar czf requiem-${{ needs.create-release.outputs.version }}-linux-x86_64.tar.gz requiem
+          cd ../..
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/release/requiem-${{ needs.create-release.outputs.version }}-linux-x86_64.tar.gz
+          asset_name: requiem-${{ needs.create-release.outputs.version }}-linux-x86_64.tar.gz
+          asset_content_type: application/gzip
+
+  # Windows 构建和发布
+  build-windows:
+    name: Build and Release (Windows)
+    runs-on: windows-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Create zip
+        run: |
+          cd target/release
+          Compress-Archive -Path requiem.exe -DestinationPath requiem-${{ needs.create-release.outputs.version }}-windows-x86_64.zip
+          cd ../..
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/release/requiem-${{ needs.create-release.outputs.version }}-windows-x86_64.zip
+          asset_name: requiem-${{ needs.create-release.outputs.version }}-windows-x86_64.zip
+          asset_content_type: application/zip
+
+  # macOS 构建和发布
+  build-macos:
+    name: Build and Release (macOS)
+    runs-on: macos-latest
+    needs: create-release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Strip binary
+        run: strip target/release/requiem
+
+      - name: Create tarball
+        run: |
+          cd target/release
+          tar czf requiem-${{ needs.create-release.outputs.version }}-macos-x86_64.tar.gz requiem
+          cd ../..
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/release/requiem-${{ needs.create-release.outputs.version }}-macos-x86_64.tar.gz
+          asset_name: requiem-${{ needs.create-release.outputs.version }}-macos-x86_64.tar.gz
+          asset_content_type: application/gzip
+
+  # Arch Linux PKGBUILD 构建和发布
+  build-arch:
+    name: Build and Release (Arch Linux)
+    runs-on: ubuntu-latest
+    needs: create-release
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Update system and install dependencies
+        run: |
+          pacman -Syu --noconfirm
+          pacman -S --noconfirm base-devel git rust cargo openssl fontconfig adobe-source-han-sans-otf-fonts
+
+      - uses: actions/checkout@v4
+
+      - name: Update PKGBUILD version
+        run: |
+          sed -i "s/pkgver=.*/pkgver=${{ needs.create-release.outputs.version }}/" PKGBUILD
+          sed -i "s/pkgrel=.*/pkgrel=1/" PKGBUILD
+
+      - name: Build package
+        run: |
+          # Create a non-root user for makepkg
+          useradd -m builder
+          chown -R builder:builder .
+
+          # Build as builder user
+          su builder -c "makepkg --noconfirm -sf"
+
+      - name: Get package filename
+        id: get_pkgfile
+        run: |
+          PKGFILE=$(ls requiem-*.pkg.tar.zst)
+          echo "pkgfile=$PKGFILE" >> $GITHUB_OUTPUT
+
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: archlinux-package
+          path: requiem-*.pkg.tar.zst
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./${{ steps.get_pkgfile.outputs.pkgfile }}
+          asset_name: ${{ steps.get_pkgfile.outputs.pkgfile }}
+          asset_content_type: application/zstd
+
+      - name: Generate PKGBUILD with updated checksums
+        run: |
+          # Install tools for checksum generation
+          pacman -S --noconfirm wget
+
+          # Update checksums
+          su builder -c "updpkgsums"
+
+      - name: Upload updated PKGBUILD
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkgbuild-release
+          path: |
+            PKGBUILD
+            .SRCINFO
+
+  # 发布到 AUR
+  publish-aur:
+    name: Publish to AUR
+    runs-on: ubuntu-latest
+    needs: [create-release, build-arch]
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, 'alpha') && !contains(github.ref, 'beta')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download updated PKGBUILD
+        uses: actions/download-artifact@v4
+        with:
+          name: pkgbuild-release
+          path: .
+
+      - name: Generate .SRCINFO
+        uses: docker://archlinux:latest
+        with:
+          entrypoint: /bin/bash
+          args: |
+            -c "pacman -Syu --noconfirm && \
+                pacman -S --noconfirm base-devel git && \
+                useradd -m builder && \
+                chown -R builder:builder . && \
+                su builder -c 'makepkg --printsrcinfo > .SRCINFO'"
+
+      - name: Publish to AUR
+        uses: KSXGitHub/github-actions-deploy-aur@v2.7.0
+        with:
+          pkgname: requiem
+          pkgbuild: ./PKGBUILD
+          commit_username: ${{ secrets.AUR_USERNAME }}
+          commit_email: ${{ secrets.AUR_EMAIL }}
+          ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+          commit_message: "Update to version ${{ needs.create-release.outputs.version }}"
+          ssh_keyscan_types: rsa,ecdsa,ed25519
+
+  # 发布到 crates.io (可选)
+  publish-crates:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libxcb-render0-dev \
+            libxcb-shape0-dev \
+            libxcb-xfixes0-dev \
+            libxkbcommon-dev \
+            libssl-dev
+
+      - name: Publish to crates.io
+        run: cargo publish --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        continue-on-error: true
