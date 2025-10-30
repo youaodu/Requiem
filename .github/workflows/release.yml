@@ -110,10 +110,24 @@ jobs:
         run: |
           # Update version in WXS
           $version = "${{ needs.create-release.outputs.version }}"
-          $wxsContent = Get-Content requiem.wxs -Raw
+          $wxsPath = Join-Path $PWD "requiem-versioned.wxs"
+
+          # Read and update version
+          $wxsContent = Get-Content requiem.wxs -Raw -Encoding UTF8
           $wxsContent = $wxsContent -replace 'Version="[^"]*"', "Version=`"$version`""
-          # Use UTF8 encoding without BOM to prevent XML parsing errors
-          [System.IO.File]::WriteAllText("$PWD\requiem-versioned.wxs", $wxsContent, (New-Object System.Text.UTF8Encoding $false))
+
+          # Write with UTF8 encoding without BOM
+          $utf8NoBom = New-Object System.Text.UTF8Encoding $false
+          [System.IO.File]::WriteAllText($wxsPath, $wxsContent, $utf8NoBom)
+
+          # Verify file was created correctly
+          if (Test-Path $wxsPath) {
+            Write-Host "✅ WXS file created successfully"
+            Get-Content $wxsPath -Head 5
+          } else {
+            Write-Error "❌ Failed to create WXS file"
+            exit 1
+          }
 
           # Build MSI
           wix build requiem-versioned.wxs -out "dist\Requiem-$version-Windows.msi"
