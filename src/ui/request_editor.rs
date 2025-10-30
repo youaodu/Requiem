@@ -21,7 +21,7 @@ pub fn view<'a>(
     let method_selector = method_picker::view(request.method);
 
     let url_placeholder = translations.get("url_placeholder");
-    let url_input = text_input(&url_placeholder, &request.url)
+    let url_input = text_input(url_placeholder, &request.url)
         .on_input(Message::UrlChanged)
         .padding(10)
         .size(13);

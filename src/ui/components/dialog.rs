@@ -51,6 +51,7 @@ pub fn view<'a, Message: Clone + 'a>(
 }
 
 /// A reusable dialog container with multiple action buttons
+#[allow(clippy::type_complexity)]
 pub fn view_with_buttons<'a, Message: Clone + 'a>(
     title: &'a str,
     content: Element<'a, Message>,

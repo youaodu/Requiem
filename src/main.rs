@@ -1,3 +1,9 @@
+#![allow(dead_code)] // Allow unused code during development
+#![allow(clippy::multiple_bound_locations)]
+#![allow(clippy::collapsible_else_if)]
+#![allow(clippy::derivable_impls)]
+#![allow(clippy::clone_on_copy)]
+
 mod ai_client;
 mod app;
 mod config;

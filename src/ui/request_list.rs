@@ -71,7 +71,7 @@ pub fn view<'a>(
                     translations.get("name_placeholder"),
                     current_name,
                     13,
-                    |new_text| Message::UpdateRenamingText(new_text),
+                    Message::UpdateRenamingText,
                     Some(Message::ConfirmRename),
                 ))
                 .push(text(format!("({})", collection.items.len())).size(11))
@@ -160,6 +160,7 @@ pub fn view<'a>(
         .into()
 }
 
+#[allow(clippy::too_many_arguments)]
 fn render_items<'a>(
     items: &'a [CollectionItem],
     parent_path: &[usize],
@@ -182,7 +183,7 @@ fn render_items<'a>(
     }
 
     // Render folders first, then requests
-    let all_items = folders.into_iter().chain(requests.into_iter());
+    let all_items = folders.into_iter().chain(requests);
 
     for (item_idx, item) in all_items {
         let mut item_path = parent_path.to_vec();
@@ -216,7 +217,7 @@ fn render_items<'a>(
                             translations.get("name_placeholder"),
                             current_name,
                             12,
-                            |new_text| Message::UpdateRenamingText(new_text),
+                            Message::UpdateRenamingText,
                             Some(Message::ConfirmRename),
                         ))
                         .into()
@@ -267,7 +268,7 @@ fn render_items<'a>(
                             translations.get("name_placeholder"),
                             current_name,
                             12,
-                            |new_text| Message::UpdateRenamingText(new_text),
+                            Message::UpdateRenamingText,
                             Some(Message::ConfirmRename),
                         ))
                         .push(text(format!("({})", folder.items.len())).size(10))

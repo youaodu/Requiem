@@ -1,7 +1,8 @@
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Environment {
+    #[default]
     Development,
     Testing,
     Staging,
@@ -27,12 +28,6 @@ impl fmt::Display for Environment {
             Environment::Staging => write!(f, "预发布环境"),
             Environment::Production => write!(f, "生产环境"),
         }
-    }
-}
-
-impl Default for Environment {
-    fn default() -> Self {
-        Environment::Development
     }
 }
 

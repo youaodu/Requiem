@@ -13,6 +13,7 @@ pub struct KeyValueEditorConfig<'a> {
 /// A reusable key-value pair editor component with add/remove functionality
 ///
 /// Used for editing params, headers, cookies, auth fields, and form data
+#[allow(clippy::too_many_arguments)]
 pub fn view<'a, Message: Clone + 'a, T, F1, F2, F3, F4, F5>(
     items: &'a [T],
     config: KeyValueEditorConfig<'a>,

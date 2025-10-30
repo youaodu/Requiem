@@ -38,7 +38,7 @@ pub fn format_xml(xml_str: &str) -> Result<String, String> {
                 indent_level = indent_level.saturating_sub(1);
                 formatted.push('\n');
                 formatted.push_str(&"  ".repeat(indent_level));
-            } else if !formatted.is_empty() && formatted.chars().last() != Some('\n') {
+            } else if !formatted.is_empty() && !formatted.ends_with('\n') {
                 formatted.push('\n');
                 formatted.push_str(&"  ".repeat(indent_level));
             }

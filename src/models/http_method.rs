@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 
 /// HTTP Methods
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[allow(clippy::upper_case_acronyms)]
 pub enum HttpMethod {
+    #[default]
     GET,
     POST,
     PUT,
@@ -23,12 +25,6 @@ impl HttpMethod {
             HttpMethod::HEAD => "HEAD",
             HttpMethod::OPTIONS => "OPTIONS",
         }
-    }
-}
-
-impl Default for HttpMethod {
-    fn default() -> Self {
-        HttpMethod::GET
     }
 }
 
