@@ -183,15 +183,14 @@ The app supports multiple languages (currently English and Chinese) through the 
 
 ### Font Configuration
 
-The app uses Source Han Sans CN for Chinese character support, loaded from:
-```
-/usr/share/fonts/adobe-source-han-sans/SourceHanSansCN-Regular.otf
-```
+The app uses Source Han Sans CN for Chinese character support on Linux systems. The font is loaded from the system via fontconfig (not embedded in the binary).
 
-If building on a system without this font, either:
-1. Install adobe-source-han-sans-otf-fonts package (Arch Linux)
-2. Update font path in `src/main.rs:30`
-3. Comment out font loading (lines 30-31) for default system font
+**For optimal Chinese character display:**
+- **Arch Linux**: `sudo pacman -S adobe-source-han-sans-otf-fonts`
+- **Ubuntu/Debian**: `sudo apt install fonts-noto-cjk`
+- **macOS**: Uses PingFang SC (built-in system font)
+
+If the font is not installed, the app will fall back to system default fonts. This is acceptable for CI/CD environments or users who don't need Chinese character support.
 
 ### Logging
 

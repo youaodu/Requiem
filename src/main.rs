@@ -42,18 +42,21 @@ pub fn main() -> iced::Result {
         .subscription(|state: &Requiem| state.subscription())
         .theme(|_: &Requiem| Theme::Light);
 
-    // Load custom font on Linux where the path exists
-    #[cfg(target_os = "linux")]
-    let app = app
-        .font(include_bytes!(
-            "/usr/share/fonts/adobe-source-han-sans/SourceHanSansCN-Regular.otf"
-        ))
-        .default_font(iced::Font::with_name("Source Han Sans CN"));
-
     // On macOS, use system fonts that support Chinese
     #[cfg(target_os = "macos")]
     let app = app.default_font(iced::Font {
         family: iced::font::Family::Name("PingFang SC"),
+        weight: iced::font::Weight::Normal,
+        stretch: iced::font::Stretch::Normal,
+        style: iced::font::Style::Normal,
+    });
+
+    // On Linux, try to use Source Han Sans CN if available in the system
+    // Users can install it via: sudo pacman -S adobe-source-han-sans-otf-fonts (Arch)
+    // The font will be picked up automatically by fontconfig
+    #[cfg(target_os = "linux")]
+    let app = app.default_font(iced::Font {
+        family: iced::font::Family::Name("Source Han Sans CN"),
         weight: iced::font::Weight::Normal,
         stretch: iced::font::Stretch::Normal,
         style: iced::font::Style::Normal,
