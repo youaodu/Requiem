@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Product Id="*"
-           Name="Requiem"
+  <Package Name="Requiem"
            Language="1033"
            Version="0.0.1"
            Manufacturer="youaodu"
-           UpgradeCode="A8F5E6D4-3B2C-4F1A-9E7D-8C6B5A4E3D2F">
+           UpgradeCode="A8F5E6D4-3B2C-4F1A-9E7D-8C6B5A4E3D2F"
+           InstallerVersion="200"
+           Compressed="yes"
+           Scope="perUser">
 
-    <Package InstallerVersion="200"
-             Compressed="yes"
-             InstallScope="perUser"
-             Description="A lightweight, high-performance HTTP client" />
+    <SummaryInformation Description="A lightweight, high-performance HTTP client" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of Requiem is already installed." />
     <MediaTemplate EmbedCab="yes" />
@@ -101,5 +100,5 @@
     <!-- UI configuration -->
     <ui:WixUI Id="WixUI_Minimal" />
 
-  </Product>
+  </Package>
 </Wix>
