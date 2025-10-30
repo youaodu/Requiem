@@ -81,5 +81,7 @@
   "ai_fill_hint": "粘贴任何与请求相关的内容：后端接口代码、前端请求代码、结构体定义、curl 命令等",
   "ai_fill_input_placeholder": "在此粘贴代码或 curl 命令...",
   "ai_fill_loading": "AI 正在处理您的请求，请稍候...",
-  "confirm": "确定"
+  "confirm": "确定",
+  "word_wrap": "自动换行",
+  "format_json": "美化 JSON"
 }

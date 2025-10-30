@@ -4,6 +4,7 @@ use crate::models::{
 };
 use crate::ui::toast::Toast;
 use iced::widget::text_editor;
+use uuid::Uuid;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -13,7 +14,8 @@ pub enum Message {
     EnvironmentOptionSelected(EnvironmentOption),
     AiFill,
     SendRequest,
-    RequestSent(Result<Response, String>),
+    CancelRequest,
+    RequestSent(Uuid, Result<Response, String>), // (request_id, result)
 
     // Headers
     HeaderKeyChanged(usize, String),
@@ -47,6 +49,8 @@ pub enum Message {
     AddFormDataField,
     RemoveFormDataField(usize),
     RequestBodyAction(text_editor::Action), // Text editor action for request body
+    ToggleRequestBodyWordWrap,              // Toggle word wrap for request body
+    FormatRequestBodyJson,                  // Format JSON in request body
 
     // Tabs
     TabSelected(RequestTab),
@@ -118,4 +122,10 @@ pub enum Message {
     AiFillInputAction(text_editor::Action),
     ConfirmAiFill,
     AiFillCompleted(Result<String, String>), // AI response completed (Ok(generated_url) or Err(error))
+
+    // Splitter dragging
+    SidebarSplitterPressed,    // Sidebar splitter mouse down
+    VerticalSplitterPressed,   // Vertical splitter mouse down
+    SplitterReleased,          // Any splitter mouse up
+    WindowResized(f32, f32),   // Window resized (width, height)
 }

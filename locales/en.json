@@ -81,5 +81,7 @@
   "ai_fill_hint": "Paste any request-related content: backend API code, frontend request code, struct definitions, curl commands, etc.",
   "ai_fill_input_placeholder": "Paste code or curl command here...",
   "ai_fill_loading": "AI is processing your request, please wait...",
-  "confirm": "Confirm"
+  "confirm": "Confirm",
+  "word_wrap": "Word Wrap",
+  "format_json": "Format JSON"
 }

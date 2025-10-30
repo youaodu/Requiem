@@ -17,7 +17,8 @@ impl Requiem {
             Message::UrlChanged(url) => self.handle_url_changed(url),
             Message::AiFill => self.handle_ai_fill(),
             Message::SendRequest => self.handle_send_request(),
-            Message::RequestSent(result) => self.handle_request_sent(result),
+            Message::CancelRequest => self.handle_cancel_request(),
+            Message::RequestSent(request_id, result) => self.handle_request_sent(request_id, result),
             Message::BodyChanged(body) => self.handle_body_changed(body),
             Message::BodyFormatChanged(format) => self.handle_body_format_changed(format),
             Message::FormDataKeyChanged(idx, key) => self.handle_form_data_key_changed(idx, key),
@@ -27,6 +28,8 @@ impl Requiem {
             Message::AddFormDataField => self.handle_add_form_data_field(),
             Message::RemoveFormDataField(idx) => self.handle_remove_form_data_field(idx),
             Message::RequestBodyAction(action) => self.handle_request_body_action(action),
+            Message::ToggleRequestBodyWordWrap => self.handle_toggle_request_body_word_wrap(),
+            Message::FormatRequestBodyJson => self.handle_format_request_body_json(),
             Message::ResponseBodyAction(action) => self.handle_response_body_action(action),
             Message::CopyResponseBody => self.handle_copy_response_body(),
 
@@ -110,6 +113,12 @@ impl Requiem {
             Message::AiFillCompleted(result) => self.handle_ai_fill_completed(result),
             Message::MouseMoved(x, y) => self.handle_mouse_moved(x, y),
             Message::SearchChanged(query) => self.handle_search_changed(query),
+
+            // ============ Splitter Dragging ============
+            Message::SidebarSplitterPressed => self.handle_sidebar_splitter_pressed(),
+            Message::VerticalSplitterPressed => self.handle_vertical_splitter_pressed(),
+            Message::SplitterReleased => self.handle_splitter_released(),
+            Message::WindowResized(width, height) => self.handle_window_resized(width, height),
         }
     }
 }

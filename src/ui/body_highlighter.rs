@@ -1,5 +1,6 @@
 use iced::advanced::text::highlighter;
 use iced::Color;
+use std::collections::HashMap;
 use std::ops::Range;
 use syntect::easy::HighlightLines;
 use syntect::highlighting::{Style, ThemeSet};
@@ -38,6 +39,7 @@ pub struct BodyHighlighter {
     language: BodyLanguage,
     current_line_index: usize,
     lines: Vec<Vec<(Range<usize>, Color)>>,
+    line_cache: HashMap<String, Vec<(Range<usize>, Color)>>,
 }
 
 impl BodyHighlighter {
@@ -48,6 +50,7 @@ impl BodyHighlighter {
             language: settings.language,
             current_line_index: 0,
             lines: Vec::new(),
+            line_cache: HashMap::new(),
         }
     }
 
@@ -59,7 +62,12 @@ impl BodyHighlighter {
         )
     }
 
-    fn highlight_text_line(&self, line: &str) -> Vec<(Range<usize>, Color)> {
+    fn highlight_text_line(&mut self, line: &str) -> Vec<(Range<usize>, Color)> {
+        // Check cache first
+        if let Some(cached) = self.line_cache.get(line) {
+            return cached.clone();
+        }
+
         let mut result = Vec::new();
 
         // Get syntax definition
@@ -85,6 +93,11 @@ impl BodyHighlighter {
             }
         }
 
+        // Cache the result (limit cache size to prevent memory bloat)
+        if self.line_cache.len() < 1000 {
+            self.line_cache.insert(line.to_string(), result.clone());
+        }
+
         result
     }
 }
@@ -100,7 +113,11 @@ impl highlighter::Highlighter for BodyHighlighter {
 
     fn update(&mut self, settings: &Self::Settings) {
         // Update language if settings changed
-        self.language = settings.language;
+        if self.language != settings.language {
+            self.language = settings.language;
+            // Clear cache when language changes
+            self.line_cache.clear();
+        }
     }
 
     fn change_line(&mut self, line_index: usize) {

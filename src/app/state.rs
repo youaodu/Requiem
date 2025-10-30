@@ -2,8 +2,8 @@ use crate::ai_client::AiClient;
 use crate::app::Message;
 use crate::i18n::{I18n, Language, Translations};
 use crate::models::{
-    AiConfig, BodyFormat, BodyViewMode, Collection, CollectionItem, Environment, Request,
-    RequestTab, Response, ResponseTab,
+    AiConfig, BodyFormat, BodyType, BodyViewMode, Collection, CollectionItem, Environment,
+    Request, RequestTab, Response, ResponseTab,
 };
 use crate::ui::toast::Toast;
 use crate::utils::navigation;
@@ -66,6 +66,7 @@ pub struct Requiem {
     pub active_body_view_mode: BodyViewMode, // Active body view mode (Pretty, Source, Preview, Raw)
     pub raw_response_body: String,        // Original raw response body before formatting
     pub loading: bool,
+    pub current_request_id: Option<Uuid>, // ID of the currently executing request
     pub error_message: Option<String>, // Error message when request fails
     pub toast: Option<Toast>,
     pub context_menu: Option<ContextMenu>,
@@ -91,6 +92,15 @@ pub struct Requiem {
     pub ai_fill_input_content: text_editor::Content, // Input content for AI Fill dialog
     pub ai_fill_loading: bool,         // Whether AI Fill is loading
     pub body_format_cache: HashMap<(Uuid, BodyFormat), String>, // Cache for different body formats per request
+    pub request_body_word_wrap: bool,  // Word wrap toggle for request body editor
+    pub sidebar_width: f32,            // Width of the left sidebar (request list)
+    pub vertical_split_ratio: f32,     // Ratio of request editor height to total height (0.0-1.0)
+    pub dragging_sidebar_splitter: bool, // Whether the sidebar splitter is being dragged
+    pub dragging_vertical_splitter: bool, // Whether the vertical splitter is being dragged
+    pub drag_start_mouse_pos: (f32, f32), // Mouse position when drag started
+    pub drag_start_sidebar_width: f32, // Sidebar width when drag started
+    pub drag_start_vertical_ratio: f32, // Vertical ratio when drag started
+    pub window_height: f32,            // Current window height for accurate vertical split calculation
 }
 
 impl Requiem {
@@ -145,6 +155,21 @@ impl Requiem {
 
         let active_tab_index = if open_tabs.is_empty() { None } else { Some(0) };
 
+        // Initialize request body content if there's a default tab
+        let request_body_content = if let Some(first_coll) = collections.first() {
+            if let Some(CollectionItem::Request(first_req)) = first_coll.items.first() {
+                let body_text = match &first_req.body {
+                    BodyType::Json(s) | BodyType::Xml(s) | BodyType::Text(s) => s.clone(),
+                    _ => String::new(),
+                };
+                text_editor::Content::with_text(&body_text)
+            } else {
+                text_editor::Content::new()
+            }
+        } else {
+            text_editor::Content::new()
+        };
+
         Self {
             collections,
             selected_collection,
@@ -155,6 +180,7 @@ impl Requiem {
             active_body_view_mode: BodyViewMode::Raw,
             raw_response_body: String::new(),
             loading: false,
+            current_request_id: None,
             error_message: None,
             toast: None,
             context_menu: None,
@@ -169,7 +195,7 @@ impl Requiem {
             current_environment: Environment::default(),
             show_environment_dialog: false,
             response_body_content: text_editor::Content::new(),
-            request_body_content: text_editor::Content::new(),
+            request_body_content,
             language,
             translations,
             show_settings_dialog: false,
@@ -180,6 +206,15 @@ impl Requiem {
             ai_fill_input_content: text_editor::Content::new(),
             ai_fill_loading: false,
             body_format_cache: HashMap::new(),
+            request_body_word_wrap: true, // Default to enabled
+            sidebar_width: 280.0,          // Default sidebar width
+            vertical_split_ratio: 0.5,     // Default 50/50 split
+            dragging_sidebar_splitter: false,
+            dragging_vertical_splitter: false,
+            drag_start_mouse_pos: (0.0, 0.0),
+            drag_start_sidebar_width: 280.0,
+            drag_start_vertical_ratio: 0.5,
+            window_height: 800.0,          // Default window height, will be updated
         }
     }
 
@@ -284,6 +319,11 @@ impl Requiem {
         // Always handle mouse events globally, even if captured
         if let Event::Mouse(mouse::Event::CursorMoved { position }) = event {
             return Some(Message::MouseMoved(position.x, position.y));
+        }
+
+        // Handle window resize events
+        if let Event::Window(iced::window::Event::Resized(size)) = event {
+            return Some(Message::WindowResized(size.width, size.height));
         }
 
         // Only handle other events if not captured by widgets

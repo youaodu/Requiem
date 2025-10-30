@@ -1,5 +1,5 @@
 use iced::widget::{column, container, mouse_area, row, stack, text};
-use iced::{Alignment, Element, Length};
+use iced::{mouse, Alignment, Element, Length};
 
 use crate::app::{Message, Requiem};
 use crate::i18n::I18n;
@@ -33,6 +33,7 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
             state.current_environment,
             &state.request_body_content,
             &state.translations,
+            state.request_body_word_wrap,
         );
         let response_panel = response_viewer::view(
             &state.response,
@@ -41,26 +42,45 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
             &state.response_body_content,
             state.loading,
             &state.error_message,
+            &state.translations,
         );
 
-        // Column layout: tab bar on top, editor in middle, response at bottom
+        // Calculate portions for vertical split based on ratio
+        let top_portion = (state.vertical_split_ratio * 100.0) as u16;
+        let bottom_portion = ((1.0 - state.vertical_split_ratio) * 100.0) as u16;
+
+        // Create vertical splitter (draggable divider)
+        // Visual line is 2px but interaction area is 6px for easier clicking
+        let vertical_splitter = mouse_area(
+            container("")
+                .width(Length::Fill)
+                .height(2)
+                .padding([2, 0]) // 2px padding on top/bottom, makes visual line 2px
+                .style(move |_theme: &iced::Theme| {
+                    let color = if state.dragging_vertical_splitter {
+                        iced::Color::from_rgb(0.5, 0.5, 0.5)
+                    } else {
+                        iced::Color::from_rgb(0.8, 0.8, 0.8)
+                    };
+                    iced::widget::container::Style {
+                        background: Some(iced::Background::Color(color)),
+                        ..Default::default()
+                    }
+                })
+        )
+        .on_press(Message::VerticalSplitterPressed)
+        .interaction(mouse::Interaction::ResizingVertically);
+
+        // Column layout: tab bar on top, editor in middle, splitter, response at bottom
         column![
             tab_bar_row,
             container(request_editor_panel)
                 .width(Length::Fill)
-                .height(Length::FillPortion(1)),
-            container("")
-                .width(Length::Fill)
-                .height(1)
-                .style(|_theme: &iced::Theme| iced::widget::container::Style {
-                    background: Some(iced::Background::Color(iced::Color::from_rgb(
-                        0.8, 0.8, 0.8
-                    ))),
-                    ..Default::default()
-                }),
+                .height(Length::FillPortion(top_portion)),
+            vertical_splitter,
             container(response_panel)
                 .width(Length::Fill)
-                .height(Length::FillPortion(1))
+                .height(Length::FillPortion(bottom_portion))
         ]
         .spacing(0)
     } else {
@@ -76,20 +96,34 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
         .spacing(0)
     };
 
-    // Three-column layout: sidebar | editor | response
+    // Create sidebar splitter (draggable divider)
+    // Visual line is 2px but interaction area is 6px for easier clicking
+    let sidebar_splitter = mouse_area(
+        container("")
+            .width(2)
+            .height(Length::Fill)
+            .padding([0, 2]) // 2px padding on left/right, makes visual line 2px
+            .style(move |_theme: &iced::Theme| {
+                let color = if state.dragging_sidebar_splitter {
+                    iced::Color::from_rgb(0.5, 0.5, 0.5)
+                } else {
+                    iced::Color::from_rgb(0.8, 0.8, 0.8)
+                };
+                iced::widget::container::Style {
+                    background: Some(iced::Background::Color(color)),
+                    ..Default::default()
+                }
+            })
+    )
+    .on_press(Message::SidebarSplitterPressed)
+    .interaction(mouse::Interaction::ResizingHorizontally);
+
+    // Three-column layout: sidebar | splitter | main content
     let content_row = row![
         container(request_list_panel)
-            .width(Length::Fixed(280.0))
+            .width(Length::Fixed(state.sidebar_width))
             .height(Length::Fill),
-        container("")
-            .width(1)
-            .height(Length::Fill)
-            .style(|_theme: &iced::Theme| iced::widget::container::Style {
-                background: Some(iced::Background::Color(iced::Color::from_rgb(
-                    0.8, 0.8, 0.8
-                ))),
-                ..Default::default()
-            }),
+        sidebar_splitter,
         main_content
     ]
     .spacing(0);

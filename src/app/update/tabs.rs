@@ -12,7 +12,7 @@ impl Requiem {
     pub fn handle_tab_selected(&mut self, tab: models::RequestTab) -> Task<Message> {
         self.active_tab = tab;
 
-        // When switching to Body tab, sync request body to text editor content
+        // When switching to Body tab, sync request body to text editor content (only if content changed)
         if tab == models::RequestTab::Body {
             if let Some(request) = self.get_current_request() {
                 let body_text = match &request.body {
@@ -21,8 +21,11 @@ impl Requiem {
                     | models::BodyType::Text(s) => s.clone(),
                     _ => String::new(),
                 };
-                self.request_body_content =
-                    iced::widget::text_editor::Content::with_text(&body_text);
+                // Only recreate content if the text actually changed
+                if self.request_body_content.text() != body_text {
+                    self.request_body_content =
+                        iced::widget::text_editor::Content::with_text(&body_text);
+                }
             }
         }
 
@@ -77,6 +80,22 @@ impl Requiem {
             self.selected_request = Some(path);
         }
         self.response = None;
+
+        // Sync request body to text editor content (only if content changed)
+        if let Some(request) = self.get_current_request() {
+            let body_text = match &request.body {
+                models::BodyType::Json(s)
+                | models::BodyType::Xml(s)
+                | models::BodyType::Text(s) => s.clone(),
+                _ => String::new(),
+            };
+            // Only recreate content if the text actually changed
+            if self.request_body_content.text() != body_text {
+                self.request_body_content =
+                    iced::widget::text_editor::Content::with_text(&body_text);
+            }
+        }
+
         Task::none()
     }
 
@@ -96,6 +115,7 @@ impl Requiem {
                 self.active_tab_index = None;
                 self.selected_request = None;
                 self.response = None;
+                self.request_body_content = iced::widget::text_editor::Content::new();
             } else if let Some(active_idx) = self.active_tab_index {
                 if active_idx >= index {
                     self.active_tab_index =
@@ -104,6 +124,21 @@ impl Requiem {
                 if let Some(new_active_idx) = self.active_tab_index {
                     if let Some(tab) = self.open_tabs.get(new_active_idx) {
                         self.selected_request = tab.request_path.clone();
+
+                        // Sync request body to text editor content (only if content changed)
+                        if let Some(request) = self.get_current_request() {
+                            let body_text = match &request.body {
+                                models::BodyType::Json(s)
+                                | models::BodyType::Xml(s)
+                                | models::BodyType::Text(s) => s.clone(),
+                                _ => String::new(),
+                            };
+                            // Only recreate content if the text actually changed
+                            if self.request_body_content.text() != body_text {
+                                self.request_body_content =
+                                    iced::widget::text_editor::Content::with_text(&body_text);
+                            }
+                        }
                     }
                 }
             }
@@ -124,7 +159,7 @@ impl Requiem {
                 self.selected_request = tab.request_path.clone();
                 self.response = None;
 
-                // Sync request body to text editor content
+                // Sync request body to text editor content (only if content changed)
                 if let Some(request) = self.get_current_request() {
                     let body_text = match &request.body {
                         models::BodyType::Json(s)
@@ -132,8 +167,11 @@ impl Requiem {
                         | models::BodyType::Text(s) => s.clone(),
                         _ => String::new(),
                     };
-                    self.request_body_content =
-                        iced::widget::text_editor::Content::with_text(&body_text);
+                    // Only recreate content if the text actually changed
+                    if self.request_body_content.text() != body_text {
+                        self.request_body_content =
+                            iced::widget::text_editor::Content::with_text(&body_text);
+                    }
                 }
             }
         }
@@ -177,6 +215,13 @@ impl Requiem {
             self.mouse_position.0, self.mouse_position.1
         );
 
+        // Handle splitter release (if any splitter is being dragged)
+        if self.dragging_sidebar_splitter || self.dragging_vertical_splitter {
+            info!("Splitter released - ending drag");
+            self.dragging_sidebar_splitter = false;
+            self.dragging_vertical_splitter = false;
+        }
+
         // Handle tab press state (click without drag)
         if let Some(press_state) = self.tab_press_state.take() {
             let duration = press_state.press_time.elapsed();
@@ -196,6 +241,21 @@ impl Requiem {
                 self.active_tab_index = Some(press_state.tab_index);
                 if let Some(tab) = self.open_tabs.get(press_state.tab_index) {
                     self.selected_request = tab.request_path.clone();
+
+                    // Sync request body to text editor content (only if content changed)
+                    if let Some(request) = self.get_current_request() {
+                        let body_text = match &request.body {
+                            models::BodyType::Json(s)
+                            | models::BodyType::Xml(s)
+                            | models::BodyType::Text(s) => s.clone(),
+                            _ => String::new(),
+                        };
+                        // Only recreate content if the text actually changed
+                        if self.request_body_content.text() != body_text {
+                            self.request_body_content =
+                                iced::widget::text_editor::Content::with_text(&body_text);
+                        }
+                    }
                 }
             }
         }

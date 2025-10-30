@@ -78,5 +78,12 @@ where
 
     column = column.push(add_button);
 
-    container(column).padding(20).into()
+    container(column)
+        .padding(iced::Padding {
+            top: 12.0,
+            right: 16.0,
+            bottom: 12.0,
+            left: 16.0,
+        })
+        .into()
 }

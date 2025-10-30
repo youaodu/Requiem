@@ -29,6 +29,14 @@ impl Requiem {
         Task::done(Message::ShowAiFillDialog)
     }
 
+    /// Handle cancel request action
+    pub fn handle_cancel_request(&mut self) -> Task<Message> {
+        info!("Cancelling current request");
+        self.loading = false;
+        self.current_request_id = None; // Clear the request ID to ignore future responses
+        Task::none()
+    }
+
     /// Handle send request action
     pub fn handle_send_request(&mut self) -> Task<Message> {
         if let Some(request) = self.get_current_request().cloned() {
@@ -37,15 +45,20 @@ impl Requiem {
                 request.method.as_str(),
                 request.url
             );
+            // Generate a new request ID to track this request
+            let request_id = uuid::Uuid::new_v4();
             self.loading = true;
+            self.current_request_id = Some(request_id);
+
             Task::perform(
                 async move {
                     debug!("Executing HTTP request");
-                    crate::http_client::execute_request(&request)
+                    let result = crate::http_client::execute_request(&request)
                         .await
-                        .map_err(|e| e.to_string())
+                        .map_err(|e| e.to_string());
+                    (request_id, result)
                 },
-                Message::RequestSent,
+                |(id, result)| Message::RequestSent(id, result),
             )
         } else {
             Task::none()
@@ -55,9 +68,18 @@ impl Requiem {
     /// Handle request completion
     pub fn handle_request_sent(
         &mut self,
+        request_id: uuid::Uuid,
         result: Result<models::Response, String>,
     ) -> Task<Message> {
+        // Check if this request was cancelled (request_id doesn't match current_request_id)
+        if self.current_request_id != Some(request_id) {
+            info!("Ignoring response from cancelled request: {}", request_id);
+            return Task::none();
+        }
+
         self.loading = false;
+        self.current_request_id = None; // Clear the current request ID
+
         match result {
             Ok(ref response) => {
                 info!(
@@ -207,17 +229,29 @@ impl Requiem {
         &mut self,
         action: iced::widget::text_editor::Action,
     ) -> Task<Message> {
-        self.request_body_content.perform(action.clone());
-        let body_text = self.request_body_content.text();
+        use iced::widget::text_editor::Action;
 
-        if let Some(request) = self.get_current_request_mut() {
-            request.body = match request.body {
-                models::BodyType::Json(_) => models::BodyType::Json(body_text.clone()),
-                models::BodyType::Xml(_) => models::BodyType::Xml(body_text.clone()),
-                models::BodyType::Text(_) => models::BodyType::Text(body_text.clone()),
-                _ => models::BodyType::Text(body_text),
-            };
+        self.request_body_content.perform(action.clone());
+
+        // Only update request body for actual editing actions, not for navigation/scrolling
+        let should_update_body = matches!(
+            action,
+            Action::Edit(_)
+        );
+
+        if should_update_body {
+            let body_text = self.request_body_content.text();
+
+            if let Some(request) = self.get_current_request_mut() {
+                request.body = match request.body {
+                    models::BodyType::Json(_) => models::BodyType::Json(body_text.clone()),
+                    models::BodyType::Xml(_) => models::BodyType::Xml(body_text.clone()),
+                    models::BodyType::Text(_) => models::BodyType::Text(body_text.clone()),
+                    _ => models::BodyType::Text(body_text),
+                };
+            }
         }
+
         Task::none()
     }
 
@@ -254,5 +288,56 @@ impl Requiem {
         } else {
             Task::none()
         }
+    }
+
+    /// Toggle word wrap for request body editor
+    pub fn handle_toggle_request_body_word_wrap(&mut self) -> Task<Message> {
+        self.request_body_word_wrap = !self.request_body_word_wrap;
+        info!(
+            "Request body word wrap: {}",
+            if self.request_body_word_wrap {
+                "enabled"
+            } else {
+                "disabled"
+            }
+        );
+        Task::none()
+    }
+
+    /// Format JSON in request body
+    pub fn handle_format_request_body_json(&mut self) -> Task<Message> {
+        let current_text = self.request_body_content.text();
+
+        // Try to parse and format JSON
+        match serde_json::from_str::<serde_json::Value>(&current_text) {
+            Ok(json_value) => {
+                match serde_json::to_string_pretty(&json_value) {
+                    Ok(formatted_json) => {
+                        info!("Successfully formatted JSON");
+                        // Update text editor content
+                        self.request_body_content =
+                            iced::widget::text_editor::Content::with_text(&formatted_json);
+
+                        // Update request body
+                        if let Some(request) = self.get_current_request_mut() {
+                            request.body = match request.body {
+                                models::BodyType::Json(_) => {
+                                    models::BodyType::Json(formatted_json)
+                                }
+                                _ => models::BodyType::Json(formatted_json),
+                            };
+                        }
+                    }
+                    Err(e) => {
+                        error!("Failed to format JSON: {}", e);
+                    }
+                }
+            }
+            Err(e) => {
+                error!("Invalid JSON, cannot format: {}", e);
+            }
+        }
+
+        Task::none()
     }
 }

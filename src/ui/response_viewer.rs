@@ -3,6 +3,7 @@ use iced::{Border, Color, Element, Length};
 use std::collections::HashMap;
 
 use crate::app::Message;
+use crate::i18n::Translations;
 use crate::models::{BodyViewMode, Response, ResponseTab};
 use crate::ui::body_highlighter::BodyLanguage;
 use crate::ui::components::code_editor;
@@ -33,9 +34,35 @@ pub fn view<'a>(
     response_body_content: &'a text_editor::Content,
     loading: bool,
     error_message: &'a Option<String>,
+    translations: &'a Translations,
 ) -> Element<'a, Message> {
     if loading {
-        // Show loading state
+        // Show loading state with cancel button
+        let cancel_button = button(
+            container(text(translations.get("cancel")).size(14))
+                .padding([8, 16])
+                .center_x(Length::Shrink),
+        )
+        .on_press(Message::CancelRequest)
+        .style(|_theme: &iced::Theme, status: button::Status| {
+            let bg = match status {
+                button::Status::Hovered => Color::from_rgb(0.9, 0.3, 0.3),
+                button::Status::Pressed => Color::from_rgb(0.8, 0.2, 0.2),
+                _ => Color::from_rgb(0.95, 0.4, 0.4),
+            };
+
+            button::Style {
+                background: Some(iced::Background::Color(bg)),
+                text_color: Color::WHITE,
+                border: Border {
+                    width: 0.0,
+                    color: Color::TRANSPARENT,
+                    radius: 4.0.into(),
+                },
+                ..Default::default()
+            }
+        });
+
         container(
             column![
                 Space::new().height(40),
@@ -48,6 +75,10 @@ pub fn view<'a>(
                 .center_x(Length::Fill),
                 Space::new().height(12),
                 container(icons::loading_icon(32))
+                    .width(Length::Fill)
+                    .center_x(Length::Fill),
+                Space::new().height(16),
+                container(cancel_button)
                     .width(Length::Fill)
                     .center_x(Length::Fill),
             ]
@@ -188,8 +219,8 @@ pub fn view<'a>(
                             0.98, 0.98, 0.98,
                         ))),
                         border: Border {
-                            width: 1.0,
-                            color: Color::from_rgb(0.9, 0.9, 0.9),
+                            width: 0.0,
+                            color: Color::TRANSPARENT,
                             radius: 0.0.into(),
                         },
                         ..Default::default()
@@ -204,6 +235,7 @@ pub fn view<'a>(
                             response_body_content,
                             BodyLanguage::Plain,
                             Message::ResponseBodyAction,
+                            true, // word wrap enabled for response
                         )
                     }
                     BodyViewMode::Json => {
@@ -212,6 +244,7 @@ pub fn view<'a>(
                             response_body_content,
                             BodyLanguage::Json,
                             Message::ResponseBodyAction,
+                            true, // word wrap enabled for response
                         )
                     }
                     BodyViewMode::Xml => {
@@ -220,6 +253,7 @@ pub fn view<'a>(
                             response_body_content,
                             BodyLanguage::Xml,
                             Message::ResponseBodyAction,
+                            true, // word wrap enabled for response
                         )
                     }
                     BodyViewMode::Html => {
@@ -228,6 +262,7 @@ pub fn view<'a>(
                             response_body_content,
                             BodyLanguage::Html,
                             Message::ResponseBodyAction,
+                            true, // word wrap enabled for response
                         )
                     }
                 };

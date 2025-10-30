@@ -245,6 +245,33 @@ impl Requiem {
     pub fn handle_mouse_moved(&mut self, x: f32, y: f32) -> Task<Message> {
         self.mouse_position = (x, y);
 
+        // Handle splitter dragging with relative movement for smooth experience
+        if self.dragging_sidebar_splitter {
+            // Calculate delta from drag start position
+            let delta_x = x - self.drag_start_mouse_pos.0;
+            // Update sidebar width based on delta, starting from initial width
+            let new_width = self.drag_start_sidebar_width + delta_x;
+            // Clamp to reasonable min/max values
+            self.sidebar_width = new_width.max(150.0).min(600.0);
+        }
+
+        if self.dragging_vertical_splitter {
+            // Calculate delta from drag start position
+            let delta_y = y - self.drag_start_mouse_pos.1;
+
+            // Use window height for accurate calculation
+            // Subtract approximate header/tab bar height
+            const TAB_BAR_HEIGHT: f32 = 40.0;
+            let content_height = self.window_height - TAB_BAR_HEIGHT;
+
+            // Calculate how much the ratio should change based on pixel movement
+            let ratio_delta = delta_y / content_height;
+            let new_ratio = self.drag_start_vertical_ratio + ratio_delta;
+
+            // Clamp to reasonable min/max values (10% to 90%)
+            self.vertical_split_ratio = new_ratio.max(0.1).min(0.9);
+        }
+
         // Check if we should start dragging from tab press
         if let Some(press_state) = self.tab_press_state.as_ref() {
             let total_movement = x - press_state.initial_x;
@@ -523,5 +550,39 @@ impl Requiem {
                 ))))
             }
         }
+    }
+
+    /// Handle sidebar splitter press (start dragging)
+    pub fn handle_sidebar_splitter_pressed(&mut self) -> Task<Message> {
+        info!("Sidebar splitter pressed - starting drag");
+        self.dragging_sidebar_splitter = true;
+        self.drag_start_mouse_pos = self.mouse_position;
+        self.drag_start_sidebar_width = self.sidebar_width;
+        Task::none()
+    }
+
+    /// Handle vertical splitter press (start dragging)
+    pub fn handle_vertical_splitter_pressed(&mut self) -> Task<Message> {
+        info!("Vertical splitter pressed - starting drag");
+        self.dragging_vertical_splitter = true;
+        self.drag_start_mouse_pos = self.mouse_position;
+        self.drag_start_vertical_ratio = self.vertical_split_ratio;
+        Task::none()
+    }
+
+    /// Handle splitter release (end dragging)
+    pub fn handle_splitter_released(&mut self) -> Task<Message> {
+        if self.dragging_sidebar_splitter || self.dragging_vertical_splitter {
+            info!("Splitter released - ending drag");
+            self.dragging_sidebar_splitter = false;
+            self.dragging_vertical_splitter = false;
+        }
+        Task::none()
+    }
+
+    /// Handle window resize
+    pub fn handle_window_resized(&mut self, _width: f32, height: f32) -> Task<Message> {
+        self.window_height = height;
+        Task::none()
     }
 }
