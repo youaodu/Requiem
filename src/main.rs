@@ -3,6 +3,8 @@
 #![allow(clippy::collapsible_else_if)]
 #![allow(clippy::derivable_impls)]
 #![allow(clippy::clone_on_copy)]
+// Hide console window on Windows in release mode
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod ai_client;
 mod app;
@@ -24,15 +26,44 @@ use app::Requiem;
 const LOGO_BYTES: &[u8] = include_bytes!("resources/logo.png");
 
 pub fn main() -> iced::Result {
-    // Initialize logging
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::from_default_env()
-                .add_directive(tracing::Level::INFO.into()),
-        )
-        .init();
+    // Set up panic hook to log panics
+    std::panic::set_hook(Box::new(|panic_info| {
+        let msg = if let Some(s) = panic_info.payload().downcast_ref::<&str>() {
+            s
+        } else if let Some(s) = panic_info.payload().downcast_ref::<String>() {
+            s.as_str()
+        } else {
+            "Unknown panic"
+        };
+
+        let location = if let Some(location) = panic_info.location() {
+            format!("{}:{}:{}", location.file(), location.line(), location.column())
+        } else {
+            "Unknown location".to_string()
+        };
+
+        eprintln!("PANIC: {} at {}", msg, location);
+
+        // Try to write to log file as well
+        if let Ok(log_dir) = get_log_dir() {
+            let log_file = log_dir.join("panic.log");
+            let _ = std::fs::write(
+                log_file,
+                format!("PANIC at {}\n{}\nat {}\n",
+                    chrono::Local::now().format("%Y-%m-%d %H:%M:%S"),
+                    msg,
+                    location
+                ),
+            );
+        }
+    }));
+
+    // Initialize logging with file output
+    init_logging();
 
     info!("Starting Requiem v{}", env!("CARGO_PKG_VERSION"));
+    info!("Platform: {}", std::env::consts::OS);
+    info!("Architecture: {}", std::env::consts::ARCH);
 
     // Load window icon
     let icon = load_icon();
@@ -96,4 +127,55 @@ fn load_icon() -> Result<window::Icon, Box<dyn std::error::Error>> {
     let icon = window::icon::from_rgba(raw_pixels, width, height)
         .map_err(|e| format!("Failed to create icon: {:?}", e))?;
     Ok(icon)
+}
+
+/// Get log directory path
+fn get_log_dir() -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
+    let data_dir = dirs::data_dir()
+        .ok_or("Failed to get data directory")?;
+    let log_dir = data_dir.join("requiem").join("logs");
+    std::fs::create_dir_all(&log_dir)?;
+    Ok(log_dir)
+}
+
+/// Initialize logging with both stdout and file output
+fn init_logging() {
+    let env_filter = tracing_subscriber::EnvFilter::from_default_env()
+        .add_directive(tracing::Level::INFO.into());
+
+    // Try to set up file logging
+    if let Ok(log_dir) = get_log_dir() {
+        let log_file = log_dir.join(format!(
+            "requiem-{}.log",
+            chrono::Local::now().format("%Y%m%d")
+        ));
+
+        if let Ok(file) = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&log_file)
+        {
+            eprintln!("Logging to: {:?}", log_file);
+
+            use tracing_subscriber::layer::SubscriberExt;
+            use tracing_subscriber::util::SubscriberInitExt;
+
+            let file_appender = tracing_subscriber::fmt::layer()
+                .with_writer(move || file.try_clone().unwrap())
+                .with_target(true)
+                .with_ansi(false);
+
+            tracing_subscriber::registry()
+                .with(env_filter)
+                .with(tracing_subscriber::fmt::layer())
+                .with(file_appender)
+                .init();
+            return;
+        }
+    }
+
+    // Fallback to console-only logging
+    tracing_subscriber::fmt()
+        .with_env_filter(env_filter)
+        .init();
 }
