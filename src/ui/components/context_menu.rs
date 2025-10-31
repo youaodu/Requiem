@@ -39,7 +39,14 @@ pub fn view<'a>(
     // Add menu items based on target type
     match target {
         ContextMenuTarget::Request => {
-            // For requests, only show Rename and Delete
+            // For requests, show Open Folder, Rename, and Delete
+            menu_items = menu_items.push(
+                button(text(translations.get("ctx_open_folder")).size(12))
+                    .on_press(Message::OpenFolder(path.clone()))
+                    .width(Length::Fixed(150.0))
+                    .padding([6, 12])
+                    .style(menu_item_style),
+            );
             menu_items = menu_items.push(
                 button(text(translations.get("ctx_rename")).size(12))
                     .on_press(Message::StartRename(path.clone()))
@@ -67,6 +74,13 @@ pub fn view<'a>(
             menu_items = menu_items.push(
                 button(text(translations.get("ctx_new_folder")).size(12))
                     .on_press(Message::AddNewFolder(path.clone()))
+                    .width(Length::Fixed(150.0))
+                    .padding([6, 12])
+                    .style(menu_item_style),
+            );
+            menu_items = menu_items.push(
+                button(text(translations.get("ctx_open_folder")).size(12))
+                    .on_press(Message::OpenFolder(path.clone()))
                     .width(Length::Fixed(150.0))
                     .padding([6, 12])
                     .style(menu_item_style),

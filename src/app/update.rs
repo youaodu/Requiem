@@ -67,6 +67,7 @@ impl Requiem {
             Message::ConfirmRename => self.handle_confirm_rename(),
             Message::CancelRename => self.handle_cancel_rename(),
             Message::SaveRequest => self.handle_save_request(),
+            Message::OpenFolder(path) => self.handle_open_folder(path),
 
             // ============ Tab Operations ============
             Message::TabSelected(tab) => self.handle_tab_selected(tab),

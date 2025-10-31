@@ -475,4 +475,51 @@ impl Requiem {
             hide_toast_task
         }
     }
+
+    /// Open the folder containing the item in file manager
+    pub fn handle_open_folder(&mut self, path: Vec<usize>) -> Task<Message> {
+        // Close context menu
+        self.context_menu = None;
+
+        if path.is_empty() {
+            error!("Cannot open folder: empty path");
+            return Task::none();
+        }
+
+        let collection_index = path[0];
+        if let Some(collection) = self.collections.get(collection_index) {
+            let collection_path = crate::storage::get_collection_path(&self.save_directory, &collection.id);
+
+            // Get the directory containing the collection file
+            if let Some(dir_path) = collection_path.parent() {
+                let dir_str = dir_path.to_string_lossy().to_string();
+
+                // Use platform-specific command to open file manager
+                #[cfg(target_os = "linux")]
+                let command = "xdg-open";
+                #[cfg(target_os = "macos")]
+                let command = "open";
+                #[cfg(target_os = "windows")]
+                let command = "explorer";
+
+                match std::process::Command::new(command)
+                    .arg(&dir_str)
+                    .spawn()
+                {
+                    Ok(_) => {
+                        info!("Opened folder: {}", dir_str);
+                    }
+                    Err(e) => {
+                        error!("Failed to open folder: {}", e);
+                    }
+                }
+            } else {
+                error!("Failed to get parent directory for collection path");
+            }
+        } else {
+            error!("Collection not found at index: {}", collection_index);
+        }
+
+        Task::none()
+    }
 }

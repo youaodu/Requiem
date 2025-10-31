@@ -52,6 +52,7 @@
   "ctx_rename": "Rename",
   "ctx_delete": "Delete",
   "ctx_duplicate": "Duplicate",
+  "ctx_open_folder": "Open Folder",
   "response_status": "Status",
   "response_time": "Time",
   "response_size": "Size",

@@ -117,6 +117,8 @@ impl Translations {
         map.insert("ctx_new_folder".to_string(), "New Folder".to_string());
         map.insert("ctx_rename".to_string(), "Rename".to_string());
         map.insert("ctx_delete".to_string(), "Delete".to_string());
+        map.insert("ctx_open_folder".to_string(), "Open Folder".to_string());
+        map.insert("ctx_new_collection".to_string(), "New Collection".to_string());
 
         // Settings dialog
         map.insert("settings".to_string(), "Settings".to_string());
@@ -170,6 +172,8 @@ impl Translations {
         map.insert("ctx_new_folder".to_string(), "新建文件夹".to_string());
         map.insert("ctx_rename".to_string(), "重命名".to_string());
         map.insert("ctx_delete".to_string(), "删除".to_string());
+        map.insert("ctx_open_folder".to_string(), "打开所在文件夹".to_string());
+        map.insert("ctx_new_collection".to_string(), "新建集合".to_string());
 
         // Settings dialog
         map.insert("settings".to_string(), "设置".to_string());

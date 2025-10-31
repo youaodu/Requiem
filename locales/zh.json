@@ -52,6 +52,7 @@
   "ctx_rename": "重命名",
   "ctx_delete": "删除",
   "ctx_duplicate": "复制",
+  "ctx_open_folder": "打开所在文件夹",
   "response_status": "状态",
   "response_time": "耗时",
   "response_size": "大小",

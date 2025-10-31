@@ -87,6 +87,7 @@ pub enum Message {
     ConfirmRename,              // Confirm rename (get name from state)
     CancelRename,               // Cancel renaming without saving
     MouseMoved(f32, f32),       // Track mouse position
+    OpenFolder(Vec<usize>),     // Open the folder containing the item
 
     // Save and Toast
     SaveRequest,
