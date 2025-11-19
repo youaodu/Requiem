@@ -148,6 +148,12 @@ impl Translations {
         map.insert("word_wrap".to_string(), "Word Wrap".to_string());
         map.insert("format_json".to_string(), "Format JSON".to_string());
 
+        // Keyboard Shortcuts Dialog
+        map.insert(
+            "shortcuts_dialog_title".to_string(),
+            "Keyboard Shortcuts".to_string(),
+        );
+
         map
     }
 
@@ -206,6 +212,12 @@ impl Translations {
         map.insert("confirm".to_string(), "确定".to_string());
         map.insert("word_wrap".to_string(), "自动换行".to_string());
         map.insert("format_json".to_string(), "美化 JSON".to_string());
+
+        // Keyboard Shortcuts Dialog
+        map.insert(
+            "shortcuts_dialog_title".to_string(),
+            "键盘快捷键".to_string(),
+        );
 
         map
     }

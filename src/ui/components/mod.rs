@@ -10,5 +10,6 @@ pub mod language_picker;
 pub mod method_picker;
 pub mod option_buttons;
 pub mod settings_dialog;
+pub mod shortcuts_dialog;
 pub mod tabs_bar;
 pub mod textarea;

@@ -4,7 +4,9 @@ use iced::{mouse, Alignment, Element, Length};
 use crate::app::{Message, Requiem};
 use crate::i18n::I18n;
 
-use super::components::{ai_fill_dialog, context_menu, environment_dialog, settings_dialog};
+use super::components::{
+    ai_fill_dialog, context_menu, environment_dialog, settings_dialog, shortcuts_dialog,
+};
 use super::{request_editor, request_list, request_tabs, response_viewer, toast};
 
 pub fn view(state: &Requiem) -> Element<'_, Message> {
@@ -257,6 +259,31 @@ pub fn view(state: &Requiem) -> Element<'_, Message> {
         .height(Length::Fill)
         .align_x(Alignment::Center)
         .align_y(Alignment::Center);
+
+        layers.push(dialog.into());
+    }
+
+    // Shortcuts help dialog overlay
+    if state.show_shortcuts_dialog {
+        // Dark backdrop
+        let backdrop = container("")
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .style(|_theme| container::Style {
+                background: Some(iced::Background::Color(iced::Color::from_rgba(
+                    0.0, 0.0, 0.0, 0.5,
+                ))),
+                ..Default::default()
+            });
+
+        layers.push(backdrop.into());
+
+        // Dialog centered on screen
+        let dialog = container(shortcuts_dialog::shortcuts_dialog(state))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .align_x(Alignment::Center)
+            .align_y(Alignment::Center);
 
         layers.push(dialog.into());
     }

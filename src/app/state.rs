@@ -3,7 +3,7 @@ use crate::app::Message;
 use crate::i18n::{I18n, Language, Translations};
 use crate::models::{
     AiConfig, BodyFormat, BodyType, BodyViewMode, Collection, CollectionItem, Environment,
-    Request, RequestTab, Response, ResponseTab,
+    Request, RequestTab, Response, ResponseTab, ShortcutRegistry,
 };
 use crate::ui::toast::Toast;
 use crate::utils::navigation;
@@ -101,6 +101,8 @@ pub struct Requiem {
     pub drag_start_sidebar_width: f32, // Sidebar width when drag started
     pub drag_start_vertical_ratio: f32, // Vertical ratio when drag started
     pub window_height: f32,            // Current window height for accurate vertical split calculation
+    pub shortcut_registry: ShortcutRegistry, // Keyboard shortcut registry
+    pub show_shortcuts_dialog: bool,   // Whether to show shortcuts help dialog
 }
 
 impl Requiem {
@@ -215,6 +217,8 @@ impl Requiem {
             drag_start_sidebar_width: 280.0,
             drag_start_vertical_ratio: 0.5,
             window_height: 800.0,          // Default window height, will be updated
+            shortcut_registry: ShortcutRegistry::new(),
+            show_shortcuts_dialog: false,
         }
     }
 
@@ -332,23 +336,29 @@ impl Requiem {
         }
 
         match event {
-            Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) => match &key {
-                keyboard::Key::Character(c)
-                    if modifiers.contains(keyboard::Modifiers::CTRL) && c == "s" =>
-                {
-                    return Some(Message::SaveRequest);
+            Event::Keyboard(keyboard::Event::KeyPressed { key, modifiers, .. }) => {
+                // Use default shortcut registry for matching
+                // (The actual registry instance will be in the app state)
+                let registry = ShortcutRegistry::new();
+
+                if let Some(action) = registry.find_action(&key, &modifiers) {
+                    return Self::shortcut_to_message(action);
                 }
-                keyboard::Key::Named(keyboard::key::Named::Escape) => {
-                    return Some(Message::CancelRename);
+
+                // Keep some legacy handlers for compatibility
+                match &key {
+                    keyboard::Key::Named(keyboard::key::Named::Escape) => {
+                        return Some(Message::CancelRename);
+                    }
+                    keyboard::Key::Named(keyboard::key::Named::ArrowLeft) => {
+                        return Some(Message::MoveActiveTabLeft);
+                    }
+                    keyboard::Key::Named(keyboard::key::Named::ArrowRight) => {
+                        return Some(Message::MoveActiveTabRight);
+                    }
+                    _ => {}
                 }
-                keyboard::Key::Named(keyboard::key::Named::ArrowLeft) => {
-                    return Some(Message::MoveActiveTabLeft);
-                }
-                keyboard::Key::Named(keyboard::key::Named::ArrowRight) => {
-                    return Some(Message::MoveActiveTabRight);
-                }
-                _ => {}
-            },
+            }
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) => {
                 // End drag when left mouse button is released
                 // Also trigger tab press end with current mouse position
@@ -357,6 +367,28 @@ impl Requiem {
             _ => {}
         }
         None
+    }
+
+    /// Convert a shortcut action to a message
+    fn shortcut_to_message(action: crate::models::ShortcutAction) -> Option<Message> {
+        use crate::models::ShortcutAction;
+
+        match action {
+            ShortcutAction::SendRequest => Some(Message::SendRequest),
+            ShortcutAction::CancelRequest => Some(Message::CancelRequest),
+            ShortcutAction::SaveRequest => Some(Message::SaveRequest),
+            ShortcutAction::NewRequest => Some(Message::AddNewRequest(vec![])),
+            ShortcutAction::NewCollection => Some(Message::AddNewCollection),
+            ShortcutAction::CloseTab => Some(Message::CloseActiveTab),
+            ShortcutAction::NextTab => Some(Message::NextTab),
+            ShortcutAction::PreviousTab => Some(Message::PreviousTab),
+            ShortcutAction::ShowSettings => Some(Message::ShowSettingsDialog),
+            ShortcutAction::ShowHelp => Some(Message::ShowShortcutsDialog),
+            ShortcutAction::ManageEnvironments => Some(Message::ShowEnvironmentDialog),
+            ShortcutAction::CopyResponse => Some(Message::CopyResponseBody),
+            ShortcutAction::FormatJson => Some(Message::FormatRequestBodyJson),
+            _ => None, // Other actions not yet mapped
+        }
     }
 }
 

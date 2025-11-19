@@ -334,4 +334,59 @@ impl Requiem {
         );
         Task::none()
     }
+
+    /// Close the currently active tab
+    pub fn handle_close_active_tab(&mut self) -> Task<Message> {
+        if let Some(active_idx) = self.active_tab_index {
+            self.handle_close_tab(active_idx)
+        } else {
+            Task::none()
+        }
+    }
+
+    /// Switch to the next tab
+    pub fn handle_next_tab(&mut self) -> Task<Message> {
+        if self.open_tabs.is_empty() {
+            return Task::none();
+        }
+
+        if let Some(current_idx) = self.active_tab_index {
+            let next_idx = (current_idx + 1) % self.open_tabs.len();
+            self.active_tab_index = Some(next_idx);
+
+            // Update selected request
+            if let Some(tab) = self.open_tabs.get(next_idx) {
+                if let Some(ref path) = tab.request_path {
+                    self.selected_request = Some(path.clone());
+                }
+            }
+        }
+
+        Task::none()
+    }
+
+    /// Switch to the previous tab
+    pub fn handle_previous_tab(&mut self) -> Task<Message> {
+        if self.open_tabs.is_empty() {
+            return Task::none();
+        }
+
+        if let Some(current_idx) = self.active_tab_index {
+            let prev_idx = if current_idx == 0 {
+                self.open_tabs.len() - 1
+            } else {
+                current_idx - 1
+            };
+            self.active_tab_index = Some(prev_idx);
+
+            // Update selected request
+            if let Some(tab) = self.open_tabs.get(prev_idx) {
+                if let Some(ref path) = tab.request_path {
+                    self.selected_request = Some(path.clone());
+                }
+            }
+        }
+
+        Task::none()
+    }
 }

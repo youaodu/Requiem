@@ -74,6 +74,9 @@ impl Requiem {
             Message::ResponseTabSelected(tab) => self.handle_response_tab_selected(tab),
             Message::OpenTab(path) => self.handle_open_tab(path),
             Message::CloseTab(index) => self.handle_close_tab(index),
+            Message::CloseActiveTab => self.handle_close_active_tab(),
+            Message::NextTab => self.handle_next_tab(),
+            Message::PreviousTab => self.handle_previous_tab(),
             Message::SwitchTab(index) => self.handle_switch_tab(index),
             Message::TabDragStart(index, offset_x) => self.handle_tab_drag_start(index, offset_x),
             Message::TabDragMove(x) => self.handle_tab_drag_move(x),
@@ -120,6 +123,10 @@ impl Requiem {
             Message::VerticalSplitterPressed => self.handle_vertical_splitter_pressed(),
             Message::SplitterReleased => self.handle_splitter_released(),
             Message::WindowResized(width, height) => self.handle_window_resized(width, height),
+
+            // ============ Keyboard Shortcuts ============
+            Message::ShowShortcutsDialog => self.handle_show_shortcuts_dialog(),
+            Message::CloseShortcutsDialog => self.handle_close_shortcuts_dialog(),
         }
     }
 }

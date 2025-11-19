@@ -70,7 +70,10 @@ pub enum Message {
     // Tabs
     OpenTab(Vec<usize>),       // Open request in new tab
     CloseTab(usize),           // Close tab by index
+    CloseActiveTab,            // Close the currently active tab
     SwitchTab(usize),          // Switch to tab by index
+    NextTab,                   // Switch to next tab
+    PreviousTab,               // Switch to previous tab
     TabDragStart(usize, f32),  // Start dragging tab (index, initial x offset)
     TabDragMove(f32),          // Mouse moved while dragging (x position)
     TabDragEnd,                // End tab dragging and handle tab click
@@ -129,4 +132,8 @@ pub enum Message {
     VerticalSplitterPressed,   // Vertical splitter mouse down
     SplitterReleased,          // Any splitter mouse up
     WindowResized(f32, f32),   // Window resized (width, height)
+
+    // Keyboard shortcuts
+    ShowShortcutsDialog,
+    CloseShortcutsDialog,
 }

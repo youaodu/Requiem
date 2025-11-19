@@ -8,6 +8,7 @@ mod request;
 mod request_tab;
 mod response;
 mod response_tab;
+mod shortcuts;
 
 pub use ai_config::{AiConfig, AiEngine};
 pub use body::{BodyFormat, BodyType};
@@ -19,3 +20,4 @@ pub use request::Request;
 pub use request_tab::RequestTab;
 pub use response::Response;
 pub use response_tab::{BodyViewMode, ResponseTab};
+pub use shortcuts::{ShortcutAction, ShortcutRegistry};

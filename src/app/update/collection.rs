@@ -34,6 +34,29 @@ impl Requiem {
         let request_id = new_request.id;
         let request_name = new_request.name.clone();
 
+        // Determine the parent path for the new request
+        // If parent_path is empty (e.g., from keyboard shortcut), use intelligent defaults
+        let actual_parent_path = if parent_path.is_empty() {
+            // Try to use the currently selected collection or the first available collection
+            if let Some(selected_collection_idx) = self.selected_collection {
+                vec![selected_collection_idx]
+            } else if !self.collections.is_empty() {
+                vec![0] // Use first collection
+            } else {
+                // No collections exist - create a default one
+                let default_collection = models::Collection {
+                    id: Uuid::new_v4(),
+                    name: "My Collection".to_string(),
+                    items: vec![],
+                    expanded: true,
+                };
+                self.collections.push(default_collection);
+                vec![0]
+            }
+        } else {
+            parent_path
+        };
+
         let new_tab = super::super::state::RequestTabItem {
             id: request_id,
             name: request_name.clone(),
@@ -41,15 +64,18 @@ impl Requiem {
             is_modified: false,
             is_new: true,
             draft_request: Some(new_request),
-            parent_path: Some(parent_path.clone()),
+            parent_path: Some(actual_parent_path.clone()),
         };
 
         self.open_tabs.push(new_tab);
         self.active_tab_index = Some(self.open_tabs.len() - 1);
         self.selected_request = None;
-        self.selected_collection = Some(parent_path[0]);
+        self.selected_collection = Some(actual_parent_path[0]);
         self.response = None;
         self.context_menu = None;
+
+        // Sync request body content
+        self.request_body_content = iced::widget::text_editor::Content::new();
 
         Task::none()
     }

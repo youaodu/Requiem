@@ -8,9 +8,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Tech Stack:**
 - Language: Rust 2021
-- UI Framework: iced 0.13 (native Elm-architecture GUI)
+- UI Framework: iced (git version, native Elm-architecture GUI with IME support)
 - HTTP Client: reqwest 0.12 with tokio async runtime
 - Syntax Highlighting: syntect 5
+- AI Integration: agent-client-protocol 0.4 (for Claude Code/Codex)
 
 ## Build & Development Commands
 
@@ -60,6 +61,28 @@ RUST_LOG=trace RUST_BACKTRACE=full cargo run
 ./debug.sh perf
 ```
 
+### Build Scripts
+
+The project includes helper scripts in the `scripts/` directory:
+
+```bash
+# Convert icons (Bootstrap Icons to iced format)
+./scripts/convert-icons.sh
+
+# Test Arch Linux package build (requires docker or podman)
+./scripts/test-arch-build.sh
+
+# Test Windows build (PowerShell)
+./scripts/test-windows-build.ps1
+```
+
+### CI/CD
+
+GitHub Actions workflows (`.github/workflows/`):
+- **ci.yml**: Continuous integration (test, clippy, fmt) on every push
+- **release.yml**: Automated release builds for Linux, macOS, and Windows
+- **dependency-update.yml**: Automated dependency updates via Dependabot
+
 ## Architecture
 
 ### Module Structure
@@ -72,6 +95,8 @@ src/
 ├── i18n.rs              # Internationalization support (English/Chinese)
 ├── http_client.rs       # HTTP request execution (reqwest wrapper)
 ├── ai_client.rs         # AI integration via Agent Client Protocol (ACP)
+├── config.rs            # Application configuration
+├── storage.rs           # Persistence layer for collections/requests
 ├── models/              # Core data models
 │   ├── mod.rs
 │   ├── ai_config.rs     # AI engine configuration
@@ -88,10 +113,17 @@ src/
 │   ├── mod.rs
 │   ├── state.rs         # Application state (Requiem struct)
 │   ├── message.rs       # Message enum (Elm architecture)
-│   └── update.rs        # State updates and business logic
+│   ├── update.rs        # State update router
+│   └── update/          # Update handlers split by domain
+│       ├── collection.rs    # Collection/folder operations
+│       ├── key_value.rs     # Headers/params/cookies
+│       ├── request.rs       # Request operations
+│       ├── tabs.rs          # Tab management
+│       └── ui.rs            # UI state updates
 ├── ui/                  # User interface
 │   ├── mod.rs
 │   ├── view.rs          # Main view composition
+│   ├── icons.rs         # Icon definitions (Bootstrap Icons)
 │   ├── request_editor.rs    # Request configuration UI
 │   ├── request_list.rs      # Collection/sidebar UI
 │   ├── request_tabs.rs      # Tab management UI
@@ -102,15 +134,18 @@ src/
 │   └── components/      # Reusable UI components
 │       ├── ai_engine_picker.rs   # AI engine selector
 │       ├── ai_fill_dialog.rs     # AI fill dialog
-│       ├── code_editor.rs
-│       ├── context_menu.rs
-│       ├── environment_dialog.rs
-│       ├── environment_picker.rs
-│       ├── language_picker.rs
-│       ├── method_picker.rs
-│       ├── settings_dialog.rs
-│       ├── tabs_bar.rs
-│       └── textarea.rs
+│       ├── code_editor.rs        # Code editor with syntax highlighting
+│       ├── context_menu.rs       # Right-click context menu
+│       ├── dialog.rs             # Generic dialog component
+│       ├── environment_dialog.rs # Environment management dialog
+│       ├── environment_picker.rs # Environment dropdown selector
+│       ├── key_value_editor.rs   # Key-value pair editor
+│       ├── language_picker.rs    # Language selection dropdown
+│       ├── method_picker.rs      # HTTP method selector
+│       ├── option_buttons.rs     # Option button group component
+│       ├── settings_dialog.rs    # Application settings dialog
+│       ├── tabs_bar.rs           # Tab bar component
+│       └── textarea.rs           # Multi-line text input
 └── utils/               # Utility functions
     ├── mod.rs
     └── navigation.rs    # Navigation helpers
@@ -122,15 +157,41 @@ The app uses iced's Elm architecture pattern:
 
 1. **State** (`app/state.rs`): Contains all application state in the `Requiem` struct
 2. **Message** (`app/message.rs`): Enum of all possible user interactions and events
-3. **Update** (`app/update.rs`): Pure function that transforms state based on messages
+3. **Update** (`app/update.rs`): Routes messages to specialized handlers
 4. **View** (`ui/view.rs`): Renders UI from current state
+
+#### Modular Update Architecture
+
+To keep the update logic maintainable, handlers are split into domain-specific modules in `app/update/`:
+
+- **`collection.rs`**: Handles collection/folder operations (create, delete, rename, move, drag-and-drop)
+- **`key_value.rs`**: Manages headers, query params, cookies, and auth key-value pairs
+- **`request.rs`**: Handles request configuration (method, URL, body, sending requests)
+- **`tabs.rs`**: Tab management (create, close, switch, reorder)
+- **`ui.rs`**: UI state updates (dialogs, context menus, settings)
+
+The main `update()` function in `app/update.rs` acts as a router, delegating to these specialized handlers:
+
+```rust
+impl Requiem {
+    pub fn update(&mut self, message: Message) -> Task<Message> {
+        match message {
+            Message::SendRequest => self.handle_send_request(),
+            Message::CreateFolder => self.handle_create_folder(),
+            // ... routes to appropriate handler methods
+        }
+    }
+}
+```
 
 Example flow:
 ```
 User clicks "Send" → Message::SendRequest
-→ update() executes HTTP request
+→ update() routes to handle_send_request() in request.rs
+→ HTTP request executed asynchronously
 → Message::RequestCompleted(response)
-→ update() stores response in state
+→ update() routes to handle_request_sent() in request.rs
+→ Response stored in state
 → view() re-renders with new response
 ```
 
@@ -149,12 +210,17 @@ User clicks "Send" → Message::SendRequest
 ### UI Components
 
 The UI is built with reusable components in `ui/components/`:
+- **ai_engine_picker**: AI engine selector dropdown
+- **ai_fill_dialog**: Dialog for AI-assisted request filling
 - **code_editor**: Syntax-highlighted code editor for request/response bodies
 - **context_menu**: Right-click context menu for requests/folders
+- **dialog**: Generic dialog component base
 - **environment_dialog**: Dialog for managing environments and variables
 - **environment_picker**: Dropdown to select active environment
+- **key_value_editor**: Generic editor for key-value pairs (headers, params, etc.)
 - **language_picker**: Language selection dropdown (i18n)
 - **method_picker**: HTTP method selector (GET, POST, etc.)
+- **option_buttons**: Button group for selecting between options
 - **settings_dialog**: Application settings dialog
 - **tabs_bar**: Tab bar for managing multiple request tabs
 - **textarea**: Multi-line text input component
@@ -163,6 +229,29 @@ Key UI state includes:
 - **DragState**: Tab drag-and-drop state tracking
 - **TabPressState**: Mouse press state for tab interactions
 - **ContextMenu**: Context menu display state and position
+
+### Data Storage
+
+**Configuration**: Application config is stored in TOML format at `~/.config/requiem/config.toml` (or platform-specific config directory)
+
+Config structure:
+```toml
+language = "en"  # or "zh"
+save_directory = "/home/user/.requiem"
+
+[ai_config]
+engine = "OpenAI"  # OpenAI, ClaudeCode, or Codex
+api_key = ""  # Optional API key
+```
+
+**Collections**: Stored as JSON files in the save directory (default: `~/.requiem/`)
+- Each collection is a separate file: `{collection_id}.json`
+- Collections contain hierarchical structure of folders and requests
+- Format is human-readable and Git-friendly
+
+File operations are handled by:
+- **`storage.rs`**: Collection persistence (save/load)
+- **`config.rs`**: Application configuration management
 
 ## Development Guidelines
 
@@ -220,7 +309,7 @@ Monitor with `./debug.sh mem` and `./debug.sh perf`.
 
 ## Project Status
 
-Currently in MVP phase (v0.1.0) with core HTTP client functionality implemented:
+Currently in MVP phase (v0.0.1) with core HTTP client functionality implemented:
 - ✅ Request editor with method, URL, headers, query params, body support
 - ✅ Multiple body formats (JSON, Form-data, Raw text)
 - ✅ Collection/folder organization with drag-and-drop
@@ -228,11 +317,13 @@ Currently in MVP phase (v0.1.0) with core HTTP client functionality implemented:
 - ✅ Response viewer with syntax highlighting
 - ✅ Environment variables support
 - ✅ Authentication (Bearer, Basic, API Key)
-- ✅ Context menus for request/folder operations
+- ✅ Context menus for request/folder operations (including "Open Folder" to reveal in file manager)
 - ✅ Settings dialog with language selection
 - ✅ Toast notifications
 - ✅ Keyboard shortcuts
 - ✅ Internationalization (English/Chinese)
+- ✅ Request cancellation (abort in-flight requests)
+- ✅ Resizable panels (request editor and response viewer)
 
 See `idea.md` for full feature roadmap and architectural details.
 
@@ -283,7 +374,7 @@ For Arch Linux users, here's a PKGBUILD template for creating a package:
 ```bash
 # Maintainer: Your Name <you@example.com>
 pkgname=requiem
-pkgver=0.1.0
+pkgver=0.0.1
 pkgrel=1
 pkgdesc="A lightweight, high-performance HTTP client built with Rust and iced"
 arch=('x86_64')

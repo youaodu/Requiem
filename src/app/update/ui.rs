@@ -585,4 +585,16 @@ impl Requiem {
         self.window_height = height;
         Task::none()
     }
+
+    /// Show keyboard shortcuts dialog
+    pub fn handle_show_shortcuts_dialog(&mut self) -> Task<Message> {
+        self.show_shortcuts_dialog = true;
+        Task::none()
+    }
+
+    /// Close keyboard shortcuts dialog
+    pub fn handle_close_shortcuts_dialog(&mut self) -> Task<Message> {
+        self.show_shortcuts_dialog = false;
+        Task::none()
+    }
 }
