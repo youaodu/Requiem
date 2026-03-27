@@ -1,6 +1,7 @@
 use crate::app::state::ContextMenuTarget;
 use crate::models::{
-    BodyFormat, BodyViewMode, EnvironmentOption, HttpMethod, RequestTab, Response, ResponseTab,
+    BodyFormat, BodyViewMode, EnvironmentOption, FormDataParamType, HttpMethod, RequestTab,
+    Response, ResponseTab,
 };
 use crate::ui::toast::Toast;
 use iced::widget::text_editor;
@@ -46,6 +47,9 @@ pub enum Message {
     BodyFormatChanged(BodyFormat),
     FormDataKeyChanged(usize, String),
     FormDataValueChanged(usize, String),
+    FormDataTypeChanged(usize, FormDataParamType),
+    BrowseFormDataFile(usize),
+    FormDataFileSelected(usize, Option<String>),
     AddFormDataField,
     RemoveFormDataField(usize),
     RequestBodyAction(text_editor::Action), // Text editor action for request body

@@ -15,7 +15,7 @@ pub use body::{BodyFormat, BodyType};
 pub use collection::{Collection, CollectionItem, Folder};
 pub use environment::{Environment, EnvironmentOption};
 pub use http_method::HttpMethod;
-pub use key_value::KeyValue;
+pub use key_value::{FormDataParamType, KeyValue};
 pub use request::Request;
 pub use request_tab::RequestTab;
 pub use response::Response;

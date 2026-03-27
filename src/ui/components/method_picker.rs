@@ -15,7 +15,10 @@ pub fn view(current_method: HttpMethod) -> Element<'static, Message> {
         HttpMethod::OPTIONS,
     ];
 
-    pick_list(methods, Some(current_method), Message::MethodSelected)
+    pick_list(Some(current_method), methods, |method: &HttpMethod| {
+        method.to_string()
+    })
+        .on_select(Message::MethodSelected)
         .width(Length::Fixed(100.0))
         .padding(8)
         .into()

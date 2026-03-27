@@ -25,6 +25,13 @@ impl Requiem {
             Message::FormDataValueChanged(idx, value) => {
                 self.handle_form_data_value_changed(idx, value)
             }
+            Message::FormDataTypeChanged(idx, param_type) => {
+                self.handle_form_data_type_changed(idx, param_type)
+            }
+            Message::BrowseFormDataFile(idx) => self.handle_browse_form_data_file(idx),
+            Message::FormDataFileSelected(idx, path) => {
+                self.handle_form_data_file_selected(idx, path)
+            }
             Message::AddFormDataField => self.handle_add_form_data_field(),
             Message::RemoveFormDataField(idx) => self.handle_remove_form_data_field(idx),
             Message::RequestBodyAction(action) => self.handle_request_body_action(action),

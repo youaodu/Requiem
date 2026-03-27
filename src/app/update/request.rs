@@ -196,6 +196,55 @@ impl Requiem {
         Task::none()
     }
 
+    /// Handle form data field type changes
+    pub fn handle_form_data_type_changed(
+        &mut self,
+        idx: usize,
+        param_type: models::FormDataParamType,
+    ) -> Task<Message> {
+        if let Some(request) = self.get_current_request_mut() {
+            match &mut request.body {
+                models::BodyType::FormData(fields) | models::BodyType::FormUrlEncoded(fields) => {
+                    if let Some(field) = fields.get_mut(idx) {
+                        field.param_type = param_type;
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        Task::none()
+    }
+
+    /// Open file picker for a form-data file field
+    pub fn handle_browse_form_data_file(&mut self, idx: usize) -> Task<Message> {
+        Task::perform(
+            async move {
+                use rfd::AsyncFileDialog;
+                AsyncFileDialog::new().pick_file().await
+            },
+            move |result| {
+                Message::FormDataFileSelected(
+                    idx,
+                    result.map(|file| file.path().to_string_lossy().to_string()),
+                )
+            },
+        )
+    }
+
+    /// Handle selected file for a form-data file field
+    pub fn handle_form_data_file_selected(
+        &mut self,
+        idx: usize,
+        path: Option<String>,
+    ) -> Task<Message> {
+        if let Some(path) = path {
+            return self.handle_form_data_value_changed(idx, path);
+        }
+
+        Task::none()
+    }
+
     /// Add new form data field
     pub fn handle_add_form_data_field(&mut self) -> Task<Message> {
         if let Some(request) = self.get_current_request_mut() {
@@ -284,7 +333,7 @@ impl Requiem {
         if let Some(response) = &self.response {
             use iced::clipboard;
             info!("Copying response body to clipboard");
-            clipboard::write(response.body.clone())
+            clipboard::write(response.body.clone()).discard()
         } else {
             Task::none()
         }

@@ -1,4 +1,4 @@
-use crate::models::{BodyType, HttpMethod, KeyValue, Request, Response};
+use crate::models::{BodyType, FormDataParamType, HttpMethod, KeyValue, Request, Response};
 use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -58,7 +58,22 @@ pub async fn execute_request(request: &Request) -> Result<Response> {
             let mut form = reqwest::multipart::Form::new();
             for field in fields {
                 if field.enabled {
-                    form = form.text(field.key.clone(), field.value.clone());
+                    match field.param_type {
+                        FormDataParamType::Text => {
+                            form = form.text(field.key.clone(), field.value.clone());
+                        }
+                        FormDataParamType::File => {
+                            let bytes = std::fs::read(&field.value)?;
+                            let file_name = std::path::Path::new(&field.value)
+                                .file_name()
+                                .and_then(|name| name.to_str())
+                                .unwrap_or("upload.bin")
+                                .to_string();
+
+                            let part = reqwest::multipart::Part::bytes(bytes).file_name(file_name);
+                            form = form.part(field.key.clone(), part);
+                        }
+                    }
                 }
             }
             req_builder.multipart(form)

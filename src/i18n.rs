@@ -147,6 +147,10 @@ impl Translations {
         map.insert("confirm".to_string(), "Confirm".to_string());
         map.insert("word_wrap".to_string(), "Word Wrap".to_string());
         map.insert("format_json".to_string(), "Format JSON".to_string());
+        map.insert("form_type_label".to_string(), "Type".to_string());
+        map.insert("form_type_text".to_string(), "Text".to_string());
+        map.insert("form_type_file".to_string(), "File".to_string());
+        map.insert("form_file_placeholder".to_string(), "Select file".to_string());
 
         // Keyboard Shortcuts Dialog
         map.insert(
@@ -212,6 +216,10 @@ impl Translations {
         map.insert("confirm".to_string(), "确定".to_string());
         map.insert("word_wrap".to_string(), "自动换行".to_string());
         map.insert("format_json".to_string(), "美化 JSON".to_string());
+        map.insert("form_type_label".to_string(), "类型".to_string());
+        map.insert("form_type_text".to_string(), "文本".to_string());
+        map.insert("form_type_file".to_string(), "文件".to_string());
+        map.insert("form_file_placeholder".to_string(), "选择文件".to_string());
 
         // Keyboard Shortcuts Dialog
         map.insert(

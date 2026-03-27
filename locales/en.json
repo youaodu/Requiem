@@ -84,5 +84,9 @@
   "ai_fill_loading": "AI is processing your request, please wait...",
   "confirm": "Confirm",
   "word_wrap": "Word Wrap",
-  "format_json": "Format JSON"
+  "format_json": "Format JSON",
+  "form_type_label": "Type",
+  "form_type_text": "Text",
+  "form_type_file": "File",
+  "form_file_placeholder": "Select file"
 }

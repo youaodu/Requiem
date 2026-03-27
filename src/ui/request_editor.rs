@@ -146,24 +146,32 @@ fn view_body_tab<'a>(
         match current_format {
             BodyFormat::FormData | BodyFormat::FormUrlEncoded => {
                 // Show key-value table for form data
-                let config = key_value_editor::KeyValueEditorConfig {
+                let config = key_value_editor::FormBodyEditorConfig {
                     key_label: translations.get("param_key_label"),
                     value_label: translations.get("param_value_label"),
+                    type_label: translations.get("form_type_label"),
                     key_placeholder: translations.get("form_key_placeholder"),
                     value_placeholder: translations.get("form_value_placeholder"),
                     add_button_text: translations.get("add_form_field"),
+                    text_option_label: translations.get("form_type_text"),
+                    file_option_label: translations.get("form_type_file"),
+                    browse_button_text: translations.get("browse"),
+                    file_value_placeholder: translations.get("form_file_placeholder"),
                 };
+
+                let allow_file_type = current_format == BodyFormat::FormData;
 
                 let form_editor = match &request.body {
                     BodyType::FormData(fields) | BodyType::FormUrlEncoded(fields) => {
-                        key_value_editor::view(
+                        key_value_editor::view_form_body(
                             fields,
                             config,
-                            |field| &field.key,
-                            |field| &field.value,
+                            allow_file_type,
                             Message::FormDataKeyChanged,
                             Message::FormDataValueChanged,
+                            Message::FormDataTypeChanged,
                             Message::RemoveFormDataField,
+                            Message::BrowseFormDataFile,
                             Message::AddFormDataField,
                         )
                     }

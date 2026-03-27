@@ -84,5 +84,9 @@
   "ai_fill_loading": "AI 正在处理您的请求，请稍候...",
   "confirm": "确定",
   "word_wrap": "自动换行",
-  "format_json": "美化 JSON"
+  "format_json": "美化 JSON",
+  "form_type_label": "类型",
+  "form_type_text": "文本",
+  "form_type_file": "文件",
+  "form_file_placeholder": "选择文件"
 }

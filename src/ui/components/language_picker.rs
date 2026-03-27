@@ -7,7 +7,12 @@ use crate::i18n::Language;
 pub fn view(current_language: Language) -> Element<'static, Message> {
     let languages = Language::all();
 
-    let language_selector = pick_list(languages, Some(current_language), Message::LanguageChanged)
+    let language_selector = pick_list(
+        Some(current_language),
+        languages,
+        |language: &Language| language.to_string(),
+    )
+        .on_select(Message::LanguageChanged)
         .placeholder("Select Language")
         .padding([8, 12]);
 

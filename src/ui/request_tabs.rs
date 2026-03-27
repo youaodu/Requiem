@@ -119,6 +119,8 @@ pub fn view<'a>(
                 _ => Color::from_rgb(0.7, 0.7, 0.7),
             };
 
+            let default_style = scrollable::default(_theme, status);
+
             scrollable::Style {
                 container: container::Style {
                     background: None,
@@ -128,7 +130,7 @@ pub fn view<'a>(
                     background: None,
                     border: iced::Border::default(),
                     scroller: scrollable::Scroller {
-                        color: scrollbar_color,
+                        background: iced::Background::Color(scrollbar_color),
                         border: iced::Border {
                             radius: iced::border::Radius::from(3.0),
                             ..Default::default()
@@ -144,7 +146,7 @@ pub fn view<'a>(
                         ..Default::default()
                     },
                     scroller: scrollable::Scroller {
-                        color: scrollbar_color,
+                        background: iced::Background::Color(scrollbar_color),
                         border: iced::Border {
                             radius: iced::border::Radius::from(3.0),
                             ..Default::default()
@@ -152,6 +154,7 @@ pub fn view<'a>(
                     },
                 },
                 gap: None,
+                auto_scroll: default_style.auto_scroll,
             }
         });
 
